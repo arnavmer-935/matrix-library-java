@@ -41,7 +41,7 @@ public class Matrix {
             throw MatrixException.jaggedMatrix(getMismatchedRowIndex(grid));
         }
 
-        this.entries = grid;
+        this.entries = deepGridCopy(grid);
         this.rows = grid.length;
         this.columns = grid[0].length;
         this.order = new Pair(rows, columns);
@@ -75,21 +75,31 @@ public class Matrix {
     }
 
     //Constructor for square matrix
-    public Matrix(int rows) {
-        if (rows <= 0) {
+    public Matrix(int nrows) {
+        if (nrows <= 0) {
             throw MatrixException.illegalDimensions();
         }
-        this.rows = rows;
-        this.columns = rows;
+        this.rows = nrows;
+        this.columns = nrows;
         this.order = new Pair(rows, rows);
-        this.entries = new double[this.rows][this.rows];
+        this.entries = new double[rows][columns];
     }
 
     public static Matrix constant(int nrows, int ncols, double k) {
-        double[][] res = new Matrix(nrows, ncols).getEntries();
+
+        if (nrows <= 0 || ncols <= 0) {
+            throw MatrixException.illegalDimensions();
+        }
+
+        if (Double.isNaN(k)) {
+            throw new IllegalArgumentException("Scalar value is not a number (NaN)");
+        }
+
+        double[][] res = new double[nrows][ncols];
         for (int r = 0; r < nrows; r++) {
             Arrays.fill(res[r], k);
         }
+
         return new Matrix(res);
     }
 
@@ -97,11 +107,16 @@ public class Matrix {
         return constant(nrows, ncols, 0.0);
     }
 
-    public static void nullMatrixInPlace() {
+    public void nullMatrixInPlace() {
         fillInPlace(0.0);
     }
 
     public Matrix createIdentityMatrix(int nrows) {
+
+        if (nrows <= 0) {
+            throw MatrixException.illegalDimensions();
+        }
+
         double[][] result = new double[nrows][nrows];
         for (int i = 0; i < nrows; i++) {
             for (int j = 0; j < nrows; j++) {
@@ -130,19 +145,20 @@ public class Matrix {
 
     public void setEntry(double value, int r, int c) {
         if (!isInBounds(r,c)) {
-            throw new MatrixException("Matrix coordinates must be in bounds");
+            throw new IndexOutOfBoundsException(String.format("Cell coordinates (%d, %d) out of bounds for Matrix of order %s", r, c, order));
         }
+
         this.entries[r][c] = value;
     }
 
     public void setRow(double[] row, int rowIndex) {
         if (row.length != columns) {
-            throw new MatrixException("Row length does not match the number of columns in the matrix.");
+            throw MatrixException.rowLengthMismatch();
 
         }
 
         if (!rowInRange(rowIndex)) {
-            throw new MatrixException(String.format("Row index %d is out of bounds for order %s", rowIndex, this.order));
+            throw new IndexOutOfBoundsException(String.format("Row index %d is out of bounds for Matrix of order %s", rowIndex, this.order));
         }
 
         this.entries[rowIndex] = row.clone();
@@ -150,12 +166,12 @@ public class Matrix {
 
     public void setColumn(double[] col, int colIndex) {
         if (col.length != rows) {
-            throw new MatrixException("Column length does not match the number of rows in the matrix.");
+            throw MatrixException.columnLengthMismatch();
 
         }
 
         if (!colInRange(colIndex)) {
-            throw new MatrixException(String.format("Column index %d is out of bounds for order %s", colIndex, this.order));
+            throw new IndexOutOfBoundsException(String.format("Column index %d is out of bounds for Matrix of order %s", colIndex, this.order));
         }
 
         for (int i = 0; i < rows; i++) {
@@ -165,13 +181,17 @@ public class Matrix {
 
     // ==== IN-PLACE OPERATIONS ====
     public void multiplyByScalarInPlace(double k) {
-        if (k == 1) {
+        if (almostEqual(k,1.0)) {
             return;
         }
 
-        if (k == 0) {
+        if (almostEqual(k,0.0)) {
             this.nullMatrixInPlace();
             return;
+        }
+
+        if (Double.isNaN(k)) {
+            throw new IllegalArgumentException("Scalar value is not a number (NaN)");
         }
 
         else {
@@ -183,9 +203,9 @@ public class Matrix {
         }
     }
 
-    public void addInPlace(Matrix other) throws MatrixException{
+    public void addInPlace(Matrix other) {
         if (!this.getOrder().equals(other.getOrder())) {
-            throw new MatrixException("Orders of both matrices must be the same.");
+            throw MatrixException.orderMismatch();
 
         } else {
             for (int r = 0; r < this.rows; r++) {
@@ -202,7 +222,7 @@ public class Matrix {
 
     public void transposeInPlace() {
         if (!this.isSquareMatrix()) {
-            throw new MatrixException("Non-square matrices cannot be transposed in place");
+            throw MatrixException.requireSquareMatrix();
         }
 
         for (int i = 0; i < rows; i++) {
@@ -213,9 +233,12 @@ public class Matrix {
     }
 
     public void rotation(Matrix m, int kSteps) {
-        //rotation = transposition + row reversal
 
-        kSteps %= 4; //rotating 4 times results in same matrix
+        if (!this.isSquareMatrix()) {
+            throw MatrixException.requireSquareMatrix();
+        }
+
+        kSteps %= 4; //TODO: Fix this
 
         for (int i = 0; i < kSteps; i++) {
             m = transpose(m);
@@ -227,12 +250,12 @@ public class Matrix {
 
     // ==== OUT OF PLACE OPERATIONS ====
     public Matrix multiplyByScalar(double k) {
-        if (k == 0) {
-            return createNullMatrix(this.rows, this.columns);
+        if (almostEqual(k,0.0)) {
+            return nullMatrix(this.rows, this.columns);
         }
 
-        if (k == 1) {
-            return this;
+        if (almostEqual(k,1.0)) {
+            return new Matrix(this.entries);
         }
 
         else {
@@ -248,7 +271,7 @@ public class Matrix {
 
     public Matrix add(Matrix other) throws MatrixException {
         if (!this.getOrder().equals(other.getOrder())) {
-            throw new MatrixException("Orders of both matrices must be the same.");
+            throw MatrixException.orderMismatch();
 
         } else {
             double[][] result = new double[other.rows][other.columns];
@@ -280,11 +303,11 @@ public class Matrix {
 
     public Matrix multiply(Matrix other) {
         if (this.columns != other.rows) {
-            throw new MatrixException("Product is not defined");
+            throw MatrixException.dimensionMismatch();
         }
 
         if (this.isNullMatrix() || other.isNullMatrix()) {
-            return createNullMatrix(this.rows, other.columns);
+            return nullMatrix(this.rows, other.columns);
         }
 
         double[][] product = new double[this.rows][other.columns];
@@ -301,7 +324,7 @@ public class Matrix {
 
     public Matrix inverse(Matrix m) {
         if (isSingular(m)) {
-            throw new MatrixException("Inverse of a singular Matrix is not defined.");
+            throw MatrixException.matrixSingularity();
         }
 
         int nrows = m.getRows();
@@ -563,7 +586,7 @@ public class Matrix {
 
     private Matrix getCofactorMatrix(int mthRow, int nthCol) {
         if (!isInBounds(mthRow, nthCol)) {
-            throw new MatrixException("Value out of bounds.");
+            throw new IndexOutOfBoundsException(String.format("Cell coordinates (%d, %d) out of bounds for Matrix of order %s", mthRow, nthCol, order));
         }
 
         List<List<Double>> gridList = new ArrayList<>(); //convert to arraylist grid for easier deletion of row and column
@@ -631,6 +654,19 @@ public class Matrix {
         return 0 <= colIndex && colIndex < this.columns;
     }
 
+    private double[][] deepGridCopy(double[][] grid) {
+
+        int nrows = grid.length;
+        int ncols = grid[0].length;
+        double[][] result = new double[nrows][ncols];
+
+        for (int i = 0; i < nrows; i++) {
+            for (int j = 0; j < ncols; j++) {
+                result[i][j] = grid[i][j];
+            }
+        }
+        return result;
+    }
 
     // ==== OBJECT METHODS ====
 

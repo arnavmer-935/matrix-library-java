@@ -16,46 +16,76 @@ public class Matrix {
     private int rows;
     private int columns;
     private Pair order;
-    private double[][] numbers;
+    private double[][] entries;
 
 
     // ==== MATRIX CREATION METHODS ====
-    public Matrix(int rows, int cols) {
-        this.rows = rows;
-        this.columns = cols;
-        this.order = new Pair(rows, cols);
-        this.numbers = new double[this.rows][this.columns];
+    public Matrix(int nrows, int ncols) {
+        if (nrows <= 0 || ncols <= 0) {
+            throw new IllegalArgumentException("Matrix dimensions must be positive");
+        }
+        
+        this.rows = nrows;
+        this.columns = ncols;
+        this.order = new Pair(rows, columns);
+        this.entries = new double[rows][columns];
     }
 
     public Matrix(double[][] grid) throws MatrixException {
-        if (!isJaggedMatrix(grid)) {
-            throw new MatrixException("Uneven number of entries in each row.");
+
+        if (grid.length == 0 || grid[0].length == 0) {
+            throw MatrixException.illegalDimensions();
         }
-        this.numbers = grid;
+
+        if (isJaggedGrid(grid)) {
+            throw MatrixException.jaggedMatrix(getMismatchedRowIndex(grid));
+        }
+
+        this.entries = grid;
+        this.rows = grid.length;
+        this.columns = grid[0].length;
+        this.order = new Pair(rows, columns);
     }
 
     public Matrix(List<List<Double>> grid) {
-        this.rows = grid.size();
-        this.columns = grid.get(0).size();
-        this.order = new Pair(this.rows, this.columns);
 
-        this.numbers = new double[grid.size()][grid.get(0).size()];
-        for (int i = 0; i < grid.size(); i++) {
-            for (int j = 0; j < grid.get(i).size(); j++) {
-                this.numbers[i][j] = grid.get(i).get(j);
+        if (grid == null) {
+            throw new IllegalArgumentException("Matrix grid must be non-null.");
+        }
+
+        if (grid.isEmpty() || grid.getFirst().isEmpty()) {
+            throw new IllegalArgumentException("Matrix dimensions must be positive.");
+        }
+
+        if (isJaggedGrid(grid)) {
+            throw MatrixException.jaggedMatrix(getMismatchedRowIndex(grid));
+        }
+
+        this.rows = grid.size();
+        this.columns = grid.getFirst().size();
+        this.order = new Pair(rows, columns);
+        this.entries = new double[rows][columns];
+
+        for (int i = 0; i < rows; i++) {
+            List<Double> ithRow = grid.get(i);
+            for (int j = 0; j < columns; j++) {
+                this.entries[i][j] = ithRow.get(j);
             }
         }
     }
 
     //Constructor for square matrix
     public Matrix(int rows) {
+        if (rows <= 0) {
+            throw MatrixException.illegalDimensions();
+        }
         this.rows = rows;
         this.columns = rows;
         this.order = new Pair(rows, rows);
-        this.numbers = new double[this.rows][this.rows];
+        this.entries = new double[this.rows][this.rows];
     }
 
-    public Matrix createConstantMatrix(int nrows, int ncols, double k) {
+    public static Matrix constant(int nrows, int ncols, double k) {
         double[][] res = new Matrix(nrows, ncols).getEntries();
         for (int r = 0; r < nrows; r++) {
             Arrays.fill(res[r], k);
@@ -63,11 +93,11 @@ public class Matrix {
         return new Matrix(res);
     }
 
-    public Matrix createNullMatrix(int nrows, int ncols) {
-        return createConstantMatrix(nrows, ncols, 0.0);
+    public static Matrix nullMatrix(int nrows, int ncols) {
+        return constant(nrows, ncols, 0.0);
     }
 
-    public void nullMatrixInPlace() {
+    public static void nullMatrixInPlace() {
         fillInPlace(0.0);
     }
 
@@ -96,13 +126,13 @@ public class Matrix {
 
     public Pair getOrder() { return this.order; }
 
-    public double[][] getEntries() { return this.numbers; }
+    public double[][] getEntries() { return this.entries; }
 
     public void setEntry(double value, int r, int c) {
         if (!isInBounds(r,c)) {
             throw new MatrixException("Matrix coordinates must be in bounds");
         }
-        this.numbers[r][c] = value;
+        this.entries[r][c] = value;
     }
 
     public void setRow(double[] row, int rowIndex) {
@@ -115,7 +145,7 @@ public class Matrix {
             throw new MatrixException(String.format("Row index %d is out of bounds for order %s", rowIndex, this.order));
         }
 
-        this.numbers[rowIndex] = row.clone();
+        this.entries[rowIndex] = row.clone();
     }
 
     public void setColumn(double[] col, int colIndex) {
@@ -129,7 +159,7 @@ public class Matrix {
         }
 
         for (int i = 0; i < rows; i++) {
-            this.numbers[i][colIndex] = col[i];
+            this.entries[i][colIndex] = col[i];
         }
     }
 
@@ -147,7 +177,7 @@ public class Matrix {
         else {
             for (int i = 0; i < this.rows; i++) {
                 for (int j = 0; j < this.columns; j++) {
-                    numbers[i][j] *= k;
+                    entries[i][j] *= k;
                 }
             }
         }
@@ -160,7 +190,7 @@ public class Matrix {
         } else {
             for (int r = 0; r < this.rows; r++) {
                 for (int c = 0; c < this.columns; c++) {
-                    this.numbers[r][c] += other.getValue(r, c);
+                    this.entries[r][c] += other.getValue(r, c);
                 }
             }
         }
@@ -177,7 +207,7 @@ public class Matrix {
 
         for (int i = 0; i < rows; i++) {
             for (int j = i+1; j < columns; j++) {
-                swap(numbers[i][j], numbers[j][i]);
+                swap(entries[i][j], entries[j][i]);
             }
         }
     }
@@ -262,7 +292,7 @@ public class Matrix {
         for (int i = 0; i < this.rows; i++) {
             for (int j = 0; j < this.columns; j++) {
                 double[] jthColumn = getColumn(j);
-                product[i][j] = dotProduct(this.numbers[i], jthColumn);
+                product[i][j] = dotProduct(this.entries[i], jthColumn);
             }
         }
 
@@ -295,14 +325,14 @@ public class Matrix {
         }
 
         if (m.getOrder().equals(new Pair(1,1))) { //single element matrix
-            return this.numbers[0][0];
+            return this.entries[0][0];
         }
 
         if (m.getOrder().equals(new Pair(2,2))) { //2x2 square matrix
             return (m.getValue(0,0) * m.getValue(1,1)) - (m.getValue(0,1) * m.getValue(1,0));
         }
 
-        double[] topRow = m.numbers[0];
+        double[] topRow = m.entries[0];
         double det = 0;
         for (int j = 0; j < topRow.length; j++) {
             det += ((int)Math.pow(-1, j) * getValue(0,j) * determinant(m.getCofactorMatrix(0,j)));
@@ -325,11 +355,11 @@ public class Matrix {
         for (int r = 0; r < this.rows; r++) {
             for (int c = 0; c < this.columns; c++) {
                 if (r == c) { //diagonal element
-                    if (!almostEqual(numbers[r][c], 1.0)) {
+                    if (!almostEqual(entries[r][c], 1.0)) {
                         return false;
                     }
                 } else {
-                    if (!almostEqual(numbers[r][c], 0)) {
+                    if (!almostEqual(entries[r][c], 0)) {
                         return false;
                     }
                 }
@@ -373,7 +403,7 @@ public class Matrix {
         if (this.getOrder().equals(other.getOrder())) {
             for (int i = 0; i < rows; i++) {
                 for (int j = 0; j < columns; j++) {
-                    if (this.numbers[i][j] > other.numbers[i][j]) {
+                    if (this.entries[i][j] > other.entries[i][j]) {
                         return false;
                     }
                 }
@@ -386,7 +416,7 @@ public class Matrix {
     public boolean isSymmetric() {
         for (int i = 0; i < this.rows; i++) {
             for (int j = i+1; j < this.columns; j++) {
-                if (!almostEqual(numbers[i][j], numbers[j][i])) {
+                if (!almostEqual(entries[i][j], entries[j][i])) {
                     return false;
                 }
             }
@@ -401,7 +431,7 @@ public class Matrix {
 
         for (int i = 0; i < this.rows; i++) {
             for (int j = i+1; j < this.columns; j++) {
-                if (!almostEqual(numbers[i][j], -numbers[j][i])) {
+                if (!almostEqual(entries[i][j], -entries[j][i])) {
                     return false;
                 }
             }
@@ -417,7 +447,7 @@ public class Matrix {
 
     private double getValue(int r, int c) {
         if (isInBounds(r, c)) {
-            return this.numbers[r][c];
+            return this.entries[r][c];
         }
         return -1;
     }
@@ -441,7 +471,7 @@ public class Matrix {
 
     private void fillInPlace(double k) {
         for (int i = 0; i < this.rows; i++) {
-            Arrays.fill(numbers[i], k);
+            Arrays.fill(entries[i], k);
         }
     }
 
@@ -451,7 +481,7 @@ public class Matrix {
             for (int i = 0; i < this.rows; i++) {
                 for (int j = 0; j < this.columns; j++) {
                     if (i <= j) {
-                        result.add(numbers[i][j]);
+                        result.add(entries[i][j]);
                     }
                 }
             }
@@ -465,7 +495,7 @@ public class Matrix {
             for (int i = 0; i < this.rows; i++) {
                 for (int j = 0; j < this.columns; j++) {
                     if (i >= j) {
-                        result.add(numbers[i][j]);
+                        result.add(entries[i][j]);
                     }
                 }
             }
@@ -474,7 +504,7 @@ public class Matrix {
     }
 
     private boolean areAllEqual(double k) {
-        for (double[] row : this.numbers) {
+        for (double[] row : this.entries) {
             for (double n : row) {
                 if (!almostEqual(n, k)) {
                     return false;
@@ -502,14 +532,33 @@ public class Matrix {
         return col;
     }
 
-    private boolean isJaggedMatrix(double[][] a) {
-        int firstRowLength = a[0].length;
-        for (int i = 1; i < a.length; i++) {
-            if (firstRowLength != a[i].length) {
-                return true;
+    private boolean isJaggedGrid(double[][] grid) {
+        return getMismatchedRowIndex(grid) != -1;
+    }
+
+    private boolean isJaggedGrid(List<List<Double>> grid) {
+        return getMismatchedRowIndex(grid) != -1;
+    }
+
+    private int getMismatchedRowIndex(double[][] grid) {
+        int refSize = grid[0].length;
+        for (int i = 1; i < grid.length; i++) {
+            if (grid[i].length != refSize) {
+                return i;
             }
         }
-        return false;
+        return -1; //No such row found
+        //TODO: modify isjagged method based on this
+    }
+
+    private int getMismatchedRowIndex(List<List<Double>> grid) {
+        int refSize = grid.getFirst().size();
+        for (int i = 1; i < grid.size(); i++) {
+            if (grid.get(i).size() != refSize) {
+                return i;
+            }
+        }
+        return -1; //No such row whose length is different from reference size
     }
 
     private Matrix getCofactorMatrix(int mthRow, int nthCol) {
@@ -518,7 +567,7 @@ public class Matrix {
         }
 
         List<List<Double>> gridList = new ArrayList<>(); //convert to arraylist grid for easier deletion of row and column
-        for (double[] row : this.numbers) {
+        for (double[] row : this.entries) {
             gridList.add(Arrays.stream(row).boxed().collect(Collectors.toList()));
         }
 
@@ -551,7 +600,7 @@ public class Matrix {
         for (int i = 0; i < this.rows; i++) {
             for (int j = 0; j < this.columns; j++) {
                 if (i == j) {
-                    if (!almostEqual(numbers[i][j], 0.0)) {
+                    if (!almostEqual(entries[i][j], 0.0)) {
                         return false;
                     }
                 }
@@ -566,7 +615,7 @@ public class Matrix {
 
         for (int i = 0; i < this.rows; i++) {
             for (int j = 0; j < this.columns; j++) {
-                if (!almostEqual(this.numbers[i][j], other.numbers[i][j])) {
+                if (!almostEqual(this.entries[i][j], other.entries[i][j])) {
                     return false;
                 }
             }
@@ -582,12 +631,13 @@ public class Matrix {
         return 0 <= colIndex && colIndex < this.columns;
     }
 
+
     // ==== OBJECT METHODS ====
 
     @Override
     public String toString() {
         String str = "";
-        for (double[] row : this.numbers) {
+        for (double[] row : this.entries) {
             for (double val : row) {
                 str += String.format("%.3f ", val);
             }
@@ -598,14 +648,14 @@ public class Matrix {
 
     @Override
     public int hashCode() {
-        return Arrays.deepHashCode(this.numbers);
+        return 31 * order.hashCode() + Arrays.deepHashCode(this.entries);
     }
 
     @Override
     public boolean equals(Object other) {
         boolean flag;
         switch (other) {
-            case Matrix o -> flag = this.equalsMatrix(o);
+            case Matrix o -> flag = this.equalsMatrix(o) && this.order.equals(o.getOrder());
             default -> {
                 flag = false;
             }

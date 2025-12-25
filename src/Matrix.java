@@ -687,18 +687,24 @@ public class Matrix {
         return result;
     }
 
+    private String formattedValue(double v) {
+        return Math.abs(v) <= TOLERANCE ? "0.0" : String.format("%.3f", v);
+    }
+
     // ==== OBJECT METHODS ====
 
     @Override
     public String toString() {
-        String str = "";
-        for (double[] row : this.entries) {
-            for (double val : row) {
-                str += String.format("%.3f ", val);
+        StringBuilder matrix = new StringBuilder();
+        for (int r = 0; r < rows; r++) {
+            matrix.append("[ ");
+            for (int c = 0; c < columns; c++) {
+                matrix.append(formattedValue(getValue(r,c)));
+                matrix.append(" ");
             }
-            str += "\n";
+            matrix.append("]\n");
         }
-        return str;
+        return matrix.toString();
     }
 
     @Override
@@ -713,7 +719,6 @@ public class Matrix {
         Matrix o = (Matrix)other;
         return this.equalsMatrix(o);
     }
-
-
+    
 }
 

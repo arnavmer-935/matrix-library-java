@@ -11,7 +11,7 @@ public class Matrix {
         public String toString() {
             return String.format("(%d, %d)", x, y);
         }
-    };
+    }
     private static final double TOLERANCE = 1e-6;
     private final int rows;
     private final int columns;
@@ -22,7 +22,7 @@ public class Matrix {
     // ==== MATRIX CREATION METHODS ====
     public Matrix(int nrows, int ncols) {
         if (nrows <= 0 || ncols <= 0) {
-            throw new IllegalArgumentException("Matrix dimensions must be positive");
+            throw MatrixException.illegalDimensions();
         }
         
         this.rows = nrows;
@@ -85,19 +85,48 @@ public class Matrix {
         this.entries = new double[rows][columns];
     }
 
-    public static Matrix constant(int nrows, int ncols, double k) {
+    public static Matrix ofRows(double[]... rows) {
+        if (rows == null) {
+            throw new IllegalArgumentException("Matrix grid must be non-null.");
+        }
 
+        if (rows.length <= 0 || rows[0].length == 0) {
+            throw MatrixException.illegalDimensions();
+        }
+
+        if (isJaggedGrid(rows)) {
+            throw MatrixException.jaggedMatrix(getMismatchedRowIndex(rows));
+        }
+
+        double[][] result = new double[rows.length][rows[0].length];
+        for (int i = 0; i < rows.length; i++) {
+            for (int j = 0; j < rows[0].length; j++) {
+                if (!Double.isFinite(rows[i][j])) {
+                    throw MatrixException.infiniteValue();
+                }
+                result[i][j] = rows[i][j];
+            }
+        }
+
+        return new Matrix(result);
+    }
+
+    public static Matrix ofColumns(double[]... columns) {
+        return Matrix.ofRows(columns).transpose();
+    }
+
+    public static Matrix constant(int nrows, int ncols, double k) {
         if (nrows <= 0 || ncols <= 0) {
             throw MatrixException.illegalDimensions();
         }
 
-        if (Double.isNaN(k)) {
-            throw new IllegalArgumentException("Scalar value is not a number (NaN)");
+        if (!Double.isFinite(k)) {
+            throw MatrixException.infiniteValue();
         }
 
         double[][] res = new double[nrows][ncols];
-        for (int r = 0; r < nrows; r++) {
-            Arrays.fill(res[r], k);
+        for (int i = 0; i < nrows; i++) {
+            Arrays.fill(res[i], k);
         }
 
         return new Matrix(res);
@@ -111,7 +140,10 @@ public class Matrix {
         fillInPlace(0.0);
     }
 
-    public Matrix createIdentityMatrix(int nrows) {
+    public static Matrix createScalarMatrix(int nrows, double k) {
+        if (!Double.isFinite(k)) {
+            throw MatrixException.infiniteValue();
+        }
 
         if (nrows <= 0) {
             throw MatrixException.illegalDimensions();
@@ -119,16 +151,16 @@ public class Matrix {
 
         double[][] result = new double[nrows][nrows];
         for (int i = 0; i < nrows; i++) {
-            for (int j = 0; j < nrows; j++) {
-                if (i == j) {
-                    result[i][j] = 1;
-                } else {
-                    result[i][j] = 0;
-                }
-            }
+            result[i][i] = k;
         }
+
         return new Matrix(result);
     }
+
+    public static Matrix createIdentityMatrix(int nrows) {
+        return createScalarMatrix(nrows, 1.0);
+    }
+
 
     // ==== ACCESSOR AND MUTATOR METHODS ====
     public int getRows() {
@@ -181,43 +213,56 @@ public class Matrix {
 
     // ==== IN-PLACE OPERATIONS ====
     public void multiplyByScalarInPlace(double k) {
-        if (almostEqual(k,1.0)) {
+        if (!Double.isFinite(k)) {
+            throw MatrixException.infiniteValue();
+        }
+
+        if (k == 1.0) {
             return;
         }
 
-        if (almostEqual(k,0.0)) {
+        if (k == 0.0) {
             this.nullMatrixInPlace();
             return;
         }
 
-        if (Double.isNaN(k)) {
-            throw new IllegalArgumentException("Scalar value is not a number (NaN)");
-        }
-
-        else {
-            for (int i = 0; i < this.rows; i++) {
-                for (int j = 0; j < this.columns; j++) {
-                    entries[i][j] *= k;
-                }
+        for (int i = 0; i < this.rows; i++) {
+            for (int j = 0; j < this.columns; j++) {
+                entries[i][j] *= k;
             }
         }
     }
 
     public void addInPlace(Matrix other) {
+        if (other == null) {
+            throw new IllegalArgumentException("Matrix operands must be non-null.");
+        }
+
         if (!this.getOrder().equals(other.getOrder())) {
             throw MatrixException.orderMismatch();
+        }
 
-        } else {
-            for (int r = 0; r < this.rows; r++) {
-                for (int c = 0; c < this.columns; c++) {
-                    this.entries[r][c] += other.getValue(r, c);
-                }
+        for (int r = 0; r < this.rows; r++) {
+            for (int c = 0; c < this.columns; c++) {
+                this.entries[r][c] += other.getValue(r, c);
             }
         }
     }
 
     public void subtractInPlace(Matrix other) {
-        this.addInPlace(other.multiplyByScalar(-1)); //subtraction is the same as adding to -ve
+        if (other == null) {
+            throw new IllegalArgumentException("Matrix operands must be non-null.");
+        }
+
+        if (!this.getOrder().equals(other.getOrder())) {
+            throw MatrixException.orderMismatch();
+        }
+
+        for (int r = 0; r < this.rows; r++) {
+            for (int c = 0; c < this.columns; c++) {
+                this.entries[r][c] -= other.getValue(r, c);
+            }
+        }
     }
 
     public void transposeInPlace() {
@@ -234,69 +279,57 @@ public class Matrix {
         }
     }
 
-    public void rotation(Matrix m, int kSteps) {
-
-        if (!this.isSquareMatrix()) {
-            throw MatrixException.requireSquareMatrix();
-        }
-
-        kSteps %= 4; //TODO: Fix this
-
-        for (int i = 0; i < kSteps; i++) {
-            m = transpose(m);
-            for (double[] r : m.getEntries()) {
-                reverseRow(r);
-            }
-        }
-    }
-
     // ==== OUT OF PLACE OPERATIONS ====
     public Matrix multiplyByScalar(double k) {
-        if (almostEqual(k,0.0)) {
+        if (!Double.isFinite(k)) {
+            throw MatrixException.infiniteValue();
+        }
+
+        if (k == 0.0) {
             return nullMatrix(this.rows, this.columns);
         }
 
-        if (almostEqual(k,1.0)) {
+        if (k == 1.0) {
             return new Matrix(this.entries);
         }
 
-        else {
-            double[][] result = new double[this.rows][this.columns];
-            for (int i = 0; i < result.length; i++) {
-                for (int j = 0; j < result[0].length; j++) {
-                    result[i][j] = this.getValue(i,j) * k;
-                }
+        double[][] result = new double[this.rows][this.columns];
+        for (int i = 0; i < result.length; i++) {
+            for (int j = 0; j < result[0].length; j++) {
+                result[i][j] = this.getValue(i,j) * k;
             }
-            return new Matrix(result);
         }
+        return new Matrix(result);
     }
 
-    public Matrix add(Matrix other) throws MatrixException {
+    public Matrix add(Matrix other) {
+        if (other == null) {
+            throw new IllegalArgumentException("Matrix operand must be non-null.");
+        }
+
         if (!this.getOrder().equals(other.getOrder())) {
             throw MatrixException.orderMismatch();
-
-        } else {
-            double[][] result = new double[other.rows][other.columns];
-            for (int r = 0; r < result.length; r++) {
-                for (int c = 0; c < result[0].length; c++) {
-                    result[r][c] = this.getValue(r, c) + other.getValue(r, c);
-                }
-            }
-            return new Matrix(result);
         }
+
+        double[][] result = new double[other.rows][other.columns];
+        for (int r = 0; r < result.length; r++) {
+            for (int c = 0; c < result[0].length; c++) {
+                result[r][c] = this.getValue(r, c) + other.getValue(r, c);
+            }
+        }
+        return new Matrix(result);
     }
 
     public Matrix subtract(Matrix other) {
         return add(other.multiplyByScalar(-1));
     }
 
-    public Matrix transpose(Matrix matrix) { //used for transposing rectangular matrices
-        double[][] transposedGrid = new double[matrix.getColumns()][matrix.getRows()];
-        double[][] original = matrix.getEntries();
+    public Matrix transpose() { //used for transposing rectangular matrices
+        double[][] transposedGrid = new double[this.columns][this.rows];
 
-        for (int i = 0; i < matrix.getRows(); i++) {
-            for (int j = 0; j < matrix.getColumns(); j++) {
-                transposedGrid[j][i] = original[i][j];
+        for (int i = 0; i < this.rows; i++) {
+            for (int j = 0; j < this.columns; j++) {
+                transposedGrid[j][i] = this.entries[i][j];
             }
         }
         return new Matrix(transposedGrid);
@@ -304,6 +337,10 @@ public class Matrix {
 
 
     public Matrix multiply(Matrix other) {
+        if (other == null) {
+            throw new IllegalArgumentException("Matrix operand must be non-null.");
+        }
+
         if (this.columns != other.rows) {
             throw MatrixException.dimensionMismatch();
         }
@@ -377,16 +414,16 @@ public class Matrix {
             return false;
         }
 
+        for (int i = 0; i < this.rows; ++i) {
+            if (!almostEqual(entries[i][i], 1.0)) {
+                return false;
+            }
+        }
+
         for (int r = 0; r < this.rows; r++) {
             for (int c = 0; c < this.columns; c++) {
-                if (r == c) { //diagonal element
-                    if (!almostEqual(entries[r][c], 1.0)) {
-                        return false;
-                    }
-                } else {
-                    if (!almostEqual(entries[r][c], 0)) {
-                        return false;
-                    }
+                if (r != c && !almostEqual(entries[r][c], 0)) {
+                    return false;
                 }
             }
         }
@@ -417,7 +454,7 @@ public class Matrix {
     }
 
     public boolean isConstantMatrix() {
-        return this.areAllEqual(this.getValue(0,0));
+        return this.areAllEqual(entries[0][0]);
     }
 
     public boolean isSingular(Matrix m) {
@@ -425,18 +462,23 @@ public class Matrix {
     }
 
     public boolean preceeds(Matrix other) {
-        if (this.getOrder().equals(other.getOrder())) {
-            double[][] tempGrid = other.getEntries();
-            for (int i = 0; i < rows; i++) {
-                for (int j = 0; j < columns; j++) {
-                    if (this.entries[i][j] > tempGrid[i][j]) {
-                        return false;
-                    }
+        if (other == null) {
+            throw new IllegalArgumentException("Matrix operand must be non-null.");
+        }
+
+        if (!this.getOrder().equals(other.getOrder())) {
+            return false;
+        }
+
+        double[][] tempGrid = other.getEntries();
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
+                if (this.entries[i][j] > tempGrid[i][j]) {
+                    return false;
                 }
             }
-            return true;
         }
-        return false;
+        return true;
     }
 
     public boolean isSymmetric() {
@@ -464,7 +506,6 @@ public class Matrix {
         }
         return true;
     }
-
 
     // ==== HELPER METHODS ====
     private boolean isInBounds(int r, int c) {
@@ -566,15 +607,16 @@ public class Matrix {
         return col;
     }
 
-    private boolean isJaggedGrid(double[][] grid) {
+    private static boolean isJaggedGrid(List<List<Double>> grid) {
         return getMismatchedRowIndex(grid) != -1;
     }
 
-    private boolean isJaggedGrid(List<List<Double>> grid) {
+    private static boolean isJaggedGrid(double[][] grid) {
         return getMismatchedRowIndex(grid) != -1;
     }
 
-    private int getMismatchedRowIndex(double[][] grid) {
+
+    private static int getMismatchedRowIndex(double[][] grid) {
         if (grid.length == 0) {
             throw new IllegalArgumentException("Matrix grid must be non-empty.");
         }
@@ -588,7 +630,7 @@ public class Matrix {
         return -1; //No such row found
     }
 
-    private int getMismatchedRowIndex(List<List<Double>> grid) {
+    private static int getMismatchedRowIndex(List<List<Double>> grid) {
         if (grid == null) {
             throw new IllegalArgumentException("Matrix grid must be non-null.");
         }

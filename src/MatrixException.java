@@ -34,4 +34,8 @@ public class MatrixException extends RuntimeException {
     public static MatrixException matrixSingularity() {
         return new MatrixException("This operation is not defined for a singular matrix.");
     }
+
+    public static MatrixException infiniteValue() {
+        return new MatrixException("Scalar must be a finite value.");
+    }
 }

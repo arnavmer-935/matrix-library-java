@@ -363,44 +363,73 @@ public class Matrix {
             throw MatrixException.matrixSingularity();
         }
 
-        int nrows = m.getRows();
-        int ncols = m.getColumns();
-        double[][] adjoint = new double [nrows][ncols];
-        for (int i = 0; i < nrows; i++) {
-            for (int j = 0; j < ncols; ++j) {
-                adjoint[j][i] = determinant(getCofactorMatrix(i, j));
-            }
-        }
-
-        Matrix adj = new Matrix(adjoint);
-        return adj.multiplyByScalar(Math.pow(determinant(m), -1));
+//        int nrows = m.getRows();
+//        int ncols = m.getColumns();
+//        double[][] adjoint = new double [nrows][ncols];
+//        for (int i = 0; i < nrows; i++) {
+//            for (int j = 0; j < ncols; ++j) {
+//                adjoint[j][i] = determinant(getCofactorMatrix(i, j));
+//            }
+//        }
+//
+//        Matrix adj = new Matrix(adjoint);
+//        return adj.multiplyByScalar(Math.pow(determinant(m), -1));
+        //TODO: Implement elimination
     }
 
     // ==== NUMERICAL METHODS ====
-    public double determinant(Matrix m) {
 
-        //TODO: Optimize using row reduction
-
-        if (!m.isSquareMatrix()) {
-            return 0;
+    //TODO: Optimize using row reduction
+    public double determinant() {
+        if (isJaggedGrid(this.entries)) {
+            throw MatrixException.jaggedMatrix(getMismatchedRowIndex(this.entries));
         }
 
-        if (m.getOrder().equals(new Pair(1,1))) { //single element matrix
+        if (!this.isSquareMatrix()) {
+            throw MatrixException.requireSquareMatrix();
+        }
+
+        if (this.getOrder().equals(new Pair(1,1))) { //single element matrix
             return this.entries[0][0];
         }
 
-        if (m.getOrder().equals(new Pair(2,2))) { //2x2 square matrix
-            return (m.getValue(0,0) * m.getValue(1,1)) - (m.getValue(0,1) * m.getValue(1,0));
+        if (this.getOrder().equals(new Pair(2,2))) { //2x2 square matrix
+            return (this.entries[0][0] * this.entries[1][1]) - (this.entries[0][1] * this.entries[1][0]);
         }
 
-        double[] topRow = m.entries[0];
-        double det = 0;
-        for (int j = 0; j < topRow.length; j++) {
-            det += ((int)Math.pow(-1, j) * getValue(0,j) * determinant(m.getCofactorMatrix(0,j)));
-            //determinant of a matrix is sum of products of elements in a row/column times that element's cofactor
-            //cofactor = -1^(i+j) * determinant of the minor of
+        double[][] grid = deepGridCopy(this.entries); //copying to preserve original
+        int ROWS = grid.length;
+        int COLS = grid[0].length;
+        int swapCount = 0;
+
+        for (int c = 0; c < COLS; c++) {
+            int originalC = c;
+            //first find a valid pivot
+            double pivot = findValidPivot(c); //also needs to return pivot's row index
+
+            if (!isDiagonalElement(pivot)) {
+                double[] temp = grid[originalC];
+                grid[originalC] = grid[c];
+                grid[c] = temp;
+                swapCount++;
+            }
+            //if it lies on diagonal, no swaps needed
+            // otherwise, swap pivot row with the row at index originalC.
+            //increment swap count
+            
+            //then iterate over subsequent elements of column c.
+            for (int rowCursor = c + 1; rowCursor < ROWS - 1; rowCursor++) {
+                //calculate row reduction factor and apply to entire row
+                for (int i = 0; i < grid[rowCursor].length; i++) {
+
+                    double factor = grid[rowCursor][i] / pivot;
+                    double elementInPivotRow = grid[c][i];
+                    grid[rowCursor][i] -= (factor * elementInPivotRow);
+                }
+            }
         }
-        return det;
+
+        return Math.pow(-1, swapCount) * diagonalProduct(grid);
     }
 
     // ==== QUERY METHODS ====
@@ -761,6 +790,13 @@ public class Matrix {
         return false;
     }
 
+    private static double diagonalProduct(double[][] grid) {
+        double res = 1;
+        for (int i = 0; i < grid.length; i++) {
+            res *= grid[i][i];
+        }
+        return res;
+    }
 
     private String formattedValue(double v) {
         return Math.abs(v) <= TOLERANCE ? "0.0" : String.format("%.3f", v);

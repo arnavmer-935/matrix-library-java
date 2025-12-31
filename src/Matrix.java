@@ -358,8 +358,8 @@ public class Matrix {
         return new Matrix(product);
     }
 
-    public Matrix inverse(Matrix m) {
-        if (isSingular(m)) {
+    public Matrix inverse() {
+        if (this.isSingular()) {
             throw MatrixException.matrixSingularity();
         }
 
@@ -379,7 +379,6 @@ public class Matrix {
 
     // ==== NUMERICAL METHODS ====
 
-    //TODO: Optimize using row reduction
     public double determinant() {
         if (isJaggedGrid(this.entries)) {
             throw MatrixException.jaggedMatrix(getMismatchedRowIndex(this.entries));
@@ -405,7 +404,7 @@ public class Matrix {
         for (int c = 0; c < COLS; c++) {
             int originalC = c;
             //first find a valid pivot
-            double pivot = findValidPivot(c); //also needs to return pivot's row index
+            double pivot = findValidPivot(grid, c); //also needs to return pivot's row index
 
             if (!isDiagonalElement(pivot)) {
                 double[] temp = grid[originalC];
@@ -484,8 +483,8 @@ public class Matrix {
         return this.areAllEqual(entries[0][0]);
     }
 
-    public boolean isSingular(Matrix m) {
-        return almostEqual(determinant(m), 0.0);
+    public boolean isSingular() {
+        return almostEqual(determinant(), 0.0);
     }
 
     public boolean preceeds(Matrix other) {
@@ -756,21 +755,22 @@ public class Matrix {
         return result;
     }
 
-    private double findValidPivot(int colIdx) {
-        if (!colInRange(colIdx)) {
-            throw new IndexOutOfBoundsException(String.format("Column index %d is out of bounds for Matrix of order %s", colIdx, this.order));
+    private double findValidPivot(double[][] grid, int colIdx) {
+
+        if (0 > colIdx || colIdx >= grid[0].length) {
+            throw new IndexOutOfBoundsException("Column index out of bounds.");
         }
 
-        if (colIdx == this.rows-1) {
+        if (colIdx == grid.length-1) {
             return -1; //not found
         }
 
-        if (!almostEqual(this.entries[colIdx][colIdx], 0.0)) {
+        if (!almostEqual(grid[colIdx][colIdx], 0.0)) {
             return this.entries[colIdx][colIdx]; //Ideal case: pivot is found along diagonal
         }
 
-        for (int rowIdx = colIdx + 1; rowIdx < this.rows; rowIdx++) { //already checked diagonal
-            double possible = this.entries[rowIdx][colIdx];
+        for (int rowIdx = colIdx + 1; rowIdx < grid.length; rowIdx++) { //already checked diagonal
+            double possible = grid[rowIdx][colIdx];
             if (!almostEqual(possible, 0.0)) {
                 return possible;
                 //in this case, row swapping needs to be done until the pivot ends up on the diagonal.

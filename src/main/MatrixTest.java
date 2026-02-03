@@ -72,7 +72,32 @@ public class MatrixTest {
     @Nested
     @DisplayName("Matrix Accessors and Mutators.")
     class GetterSetterTest {
-        //TODO: Stub this
+
+        @Test
+        @DisplayName("getOrder returns a correctly formatted tuple of matrix dimensions.")
+        void getOrderWorks() {
+
+        }
+
+        @Test
+        @DisplayName("setEntry method throws a MatrixException when trying to update a matrix entry.")
+        void setEntryThrowsExceptionForOutOfBounds() {
+
+        }
+
+        @Test
+        @DisplayName("setRow works")
+        void setRowUpdatesMatrixCorrectly() {
+
+        }
+
+        @Test
+        @DisplayName("setCol works")
+        void setColUpdatesMatrixCorrectly() {
+
+        }
+
+
     }
 
     @Nested

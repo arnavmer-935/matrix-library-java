@@ -212,6 +212,10 @@ public class Matrix {
             throw new IndexOutOfBoundsException(String.format("Cell coordinates (%d, %d) out of bounds for Matrix of order %s", r, c, order));
         }
 
+        if (!Double.isFinite(value)) {
+            throw new IllegalArgumentException("Given value cannot be used in matrix since it is Not a Number (NaN)");
+        }
+
         this.entries[r][c] = value;
     }
 
@@ -225,6 +229,12 @@ public class Matrix {
             throw new IndexOutOfBoundsException(String.format("Row index %d is out of bounds for Matrix of order %s", rowIndex, this.order));
         }
 
+        for (int i = 0; i < row.length; i++) {
+            if (!Double.isFinite(row[i])) {
+                throw new IllegalArgumentException("NaN (Not a Number) value found at row index " + i);
+            }
+        }
+
         this.entries[rowIndex] = row.clone();
     }
 
@@ -236,6 +246,12 @@ public class Matrix {
 
         if (!colInRange(colIndex)) {
             throw new IndexOutOfBoundsException(String.format("Column index %d is out of bounds for Matrix of order %s", colIndex, this.order));
+        }
+
+        for (int i = 0; i < col.length; i++) {
+            if (!Double.isFinite(col[i])) {
+                throw new IllegalArgumentException("NaN (Not a Number) value found at row index " + i);
+            }
         }
 
         for (int i = 0; i < rows; i++) {

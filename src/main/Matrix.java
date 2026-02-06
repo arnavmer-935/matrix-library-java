@@ -68,6 +68,15 @@ public class Matrix {
         if (isJaggedGrid(grid)) {
             throw MatrixException.jaggedMatrix(getMismatchedRowIndex(grid));
         }
+        
+        for (int i = 0; i < grid.length; i++) {
+            for (int j = 0; j < grid[0].length; j++) {
+                
+                if (!Double.isFinite(grid[i][j])) {
+                    throw new IllegalArgumentException("Infinite value at coordinates " + new Pair(i,j));
+                }
+            }
+        }
 
         this.entries = deepGridCopy(grid);
         this.rows = grid.length;
@@ -96,7 +105,12 @@ public class Matrix {
 
         for (int i = 0; i < rows; i++) {
             List<Double> ithRow = grid.get(i);
+            
             for (int j = 0; j < columns; j++) {
+                if (!Double.isFinite(ithRow.get(j))) {
+                    throw new IllegalArgumentException("Infinite/undefined value at coordinates " + new Pair(i,j));
+                }
+                
                 this.entries[i][j] = ithRow.get(j);
             }
         }
@@ -213,7 +227,7 @@ public class Matrix {
         }
 
         if (!Double.isFinite(value)) {
-            throw new IllegalArgumentException("Given value cannot be used in matrix since it is Not a Number (NaN)");
+            throw new IllegalArgumentException("Given value cannot be used in matrix since it is Not a Number (Infinite/undefined value)");
         }
 
         this.entries[r][c] = value;
@@ -231,7 +245,7 @@ public class Matrix {
 
         for (int i = 0; i < row.length; i++) {
             if (!Double.isFinite(row[i])) {
-                throw new IllegalArgumentException("NaN (Not a Number) value found at row index " + i);
+                throw new IllegalArgumentException("Infinite/undefined value found at row index " + i);
             }
         }
 
@@ -250,7 +264,7 @@ public class Matrix {
 
         for (int i = 0; i < col.length; i++) {
             if (!Double.isFinite(col[i])) {
-                throw new IllegalArgumentException("NaN (Not a Number) value found at row index " + i);
+                throw new IllegalArgumentException("Infinite/undefined value found at row index " + i);
             }
         }
 
@@ -486,7 +500,7 @@ public class Matrix {
             //first find a valid pivot
             Pivot pivot = findValidPivot(grid, c);
 
-            if (pivot.row() == -1) { //valid, non-zero pivot not found in column, hence the determinant is zero
+            if (pivot.row() == -1) { //valid, non-zero pivot not found in column, hence the determiInfinite/undefined valuet is zero
                 return 0.0;
             }
 
@@ -815,7 +829,7 @@ public class Matrix {
                 // track number of row swaps for final det calculation
             }
         }
-        return new Pivot(); //valid pivot not found in that column. If a valid pivot is not found, the determinant is zero
+        return new Pivot(); //valid pivot not found in that column. If a valid pivot is not found, the determiInfinite/undefined valuet is zero
     }
 
     private void swapGridRow(double[][] grid, int c, int row) {
@@ -844,6 +858,17 @@ public class Matrix {
 
     private String formattedValue(double v) {
         return Math.abs(v) <= TOLERANCE ? "0.0000" : String.format("%.4f", v);
+    }
+
+    private int getArrayHashCode(double[][] grid) {
+        int hash = 0;
+        for (double[] row : grid) {
+            for (double value : row) {
+                double normalized = Math.round(value / TOLERANCE) * TOLERANCE;
+                hash = (31 * hash) + Double.hashCode(normalized);
+            }
+        }
+        return hash;
     }
 
     // ==== OBJECT METHODS ====
@@ -876,7 +901,7 @@ public class Matrix {
 
     @Override
     public int hashCode() {
-        return 31 * order.hashCode() + Arrays.deepHashCode(this.entries);
+        return 31 * order.hashCode() + getArrayHashCode(this.entries);
     }
 
     @Override

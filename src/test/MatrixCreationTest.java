@@ -82,11 +82,20 @@ public class MatrixCreationTest {
         }
 
         Matrix largeConstantMatrix = Matrix.constant(50, 50, -273.6589);
-        for (int i = 0; i < constantMatrix.getRows(); i++) {
-            for (int j = 0; j < constantMatrix.getColumns(); j++) {
+        for (int i = 0; i < largeConstantMatrix.getRows(); i++) {
+            for (int j = 0; j < largeConstantMatrix.getColumns(); j++) {
                 assertEquals(-273.6589, largeConstantMatrix.getEntry(i,j), TOLERANCE);
             }
         }
+    }
+
+    @Test
+    @DisplayName("Constant factory fills matrix with the given value")
+    void constantThrowsForIllegalDimensions() {
+
+        assertThrows(MatrixException.class, () -> Matrix.constant(0, 5, 1.0));
+        assertThrows(MatrixException.class, () -> Matrix.constant(-1, -3, 2.0));
+        assertThrows(MatrixException.class, () -> Matrix.constant(3, -2, 3.0));
     }
 
     @Test
@@ -134,6 +143,10 @@ public class MatrixCreationTest {
         assertEquals(2, madeOfRows.getRows());
         assertEquals(3, madeOfRows.getColumns());
 
+        double[] r1 = {};
+        double[] r2 = {};
+        assertThrows(MatrixException.class, () -> Matrix.ofRows(r1, r2));
+
         for (int i = 0; i < madeOfRows.getRows(); i++) {
             for (int j = 0; j < madeOfRows.getColumns(); j++) {
                 assertEquals(rows[i][j], madeOfRows.getEntry(i,j), TOLERANCE);
@@ -142,6 +155,12 @@ public class MatrixCreationTest {
 
         row1[0] = 9999;
         assertEquals(1.5, madeOfRows.getEntry(0,0), TOLERANCE);
+
+        double[] newr0 = {-1, 1.5, 0, -1.42};
+        double[] newr1 = {2.56, 3.14, 4.5, 6};
+        double[] newr2 = {7.25, -999.1, -9.994};
+
+        assertThrows(MatrixException.class, () -> Matrix.ofRows(newr0, newr1, newr2));
 
     }
 
@@ -170,5 +189,11 @@ public class MatrixCreationTest {
 
         col1[1] = 7253;
         assertEquals(0, madeOfCols.getEntry(1,0), TOLERANCE);
+
+        double[] c1 = {1.5, 0};
+        double[] c2 = {-2, 3.14, 4.5};
+        double[] c3 = {7.25, -999.1};
+
+        assertThrows(MatrixException.class, () -> Matrix.ofColumns(c1,c2,c3));
     }
 }

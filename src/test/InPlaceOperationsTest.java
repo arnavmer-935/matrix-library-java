@@ -7,7 +7,7 @@ public class InPlaceOperationsTest {
 
     @Test
     @DisplayName("Testing addInPlace")
-    void doesAddInPlace() {
+    void doesAddInPlaceWork() {
 
     }
 }

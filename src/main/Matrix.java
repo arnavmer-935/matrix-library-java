@@ -57,7 +57,7 @@ public class Matrix {
 
     public Matrix(double[][] grid) throws MatrixException {
 
-        if (grid == null) {
+        if (grid == null || containsNullRows(grid)) {
             throw new IllegalArgumentException("Matrix grid must be non-null.");
         }
 
@@ -86,7 +86,7 @@ public class Matrix {
 
     public Matrix(List<List<Double>> grid) {
 
-        if (grid == null) {
+        if (grid == null || containsNullRows(grid)) {
             throw new IllegalArgumentException("Matrix grid must be non-null.");
         }
 
@@ -128,7 +128,7 @@ public class Matrix {
     }
 
     public static Matrix ofRows(double[]... rows) {
-        if (rows == null) {
+        if (rows == null || containsNullRows(rows)) {
             throw new IllegalArgumentException("Matrix grid must be non-null.");
         }
 
@@ -139,7 +139,7 @@ public class Matrix {
         if (isJaggedGrid(rows)) {
             throw MatrixException.jaggedMatrix(getMismatchedRowIndex(rows));
         }
-
+        
         double[][] result = new double[rows.length][rows[0].length];
         for (int i = 0; i < rows.length; i++) {
             for (int j = 0; j < rows[0].length; j++) {
@@ -869,6 +869,15 @@ public class Matrix {
             }
         }
         return hash;
+    }
+    
+    private static boolean containsNullRows(double[][] grid) {
+        for (double[] row : grid) {
+            if (row == null) {
+                return true;
+            }
+        }
+        return false;
     }
 
     // ==== OBJECT METHODS ====

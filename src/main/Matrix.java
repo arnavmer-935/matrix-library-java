@@ -120,6 +120,11 @@ public class Matrix {
         return new Matrix(result);
     }
 
+    //deep copy constructor
+    public Matrix(Matrix A) {
+        this(getValidMatrix(A));
+    }
+
     public static Matrix ofColumns(double[]... columns) {
         return Matrix.ofRows(columns).transpose();
     }
@@ -875,6 +880,14 @@ public class Matrix {
                 }
             }
         }
+    }
+
+    private static double[][] getValidMatrix(Matrix A) {
+        if (A == null) {
+            throw new IllegalArgumentException("Matrix input must be non-null.");
+        }
+
+        return A.toArray();
     }
 
     // ==== OBJECT METHODS ====

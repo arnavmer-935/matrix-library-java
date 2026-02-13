@@ -840,17 +840,6 @@ public class Matrix {
         return Math.abs(v) <= TOLERANCE ? "0.0000" : String.format("%.4f", v);
     }
 
-    private int getArrayHashCode(double[][] grid) {
-        int hash = 0;
-        for (double[] row : grid) {
-            for (double value : row) {
-                double normalized = Math.floor(value / (2 * TOLERANCE)) * (2 * TOLERANCE);
-                hash = (31 * hash) + Double.hashCode(normalized);
-            }
-        }
-        return hash;
-    }
-    
     private static boolean containsNullRows(double[][] grid) {
         for (double[] row : grid) {
             if (row == null) {

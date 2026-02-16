@@ -40,7 +40,7 @@ public class Matrix {
     private final int rows;
     private final int columns;
     private final Pair order;
-    private double[][] entries;
+    private final double[][] entries;
 
 
     // ==== MATRIX CREATION METHODS ====
@@ -85,7 +85,10 @@ public class Matrix {
 
         for (int i = 0; i < rows; i++) {
             List<Double> ithRow = grid.get(i);
-            
+            if (ithRow == null) {
+                throw new IllegalArgumentException("Matrix grid must be non-null.");
+            }
+
             for (int j = 0; j < columns; j++) {
                 if (!Double.isFinite(ithRow.get(j))) {
                     throw new IllegalArgumentException("Infinite/undefined value at coordinates " + new Pair(i,j));
@@ -402,6 +405,12 @@ public class Matrix {
         return new Matrix(product);
     }
 
+    public double[][] toArray() {
+        return deepGridCopy(this.entries);
+    }
+
+    // ==== NUMERICAL METHODS ====
+
     public Matrix inverse() {
 
         if (isJaggedGrid(this.entries)) {
@@ -448,12 +457,6 @@ public class Matrix {
 
     }
 
-    public double[][] toArray() {
-        return deepGridCopy(this.entries);
-    }
-
-    // ==== NUMERICAL METHODS ====
-
     public double determinant() {
         if (isJaggedGrid(this.entries)) {
             throw MatrixException.jaggedMatrix(getMismatchedRowIndex(this.entries));
@@ -477,10 +480,10 @@ public class Matrix {
         int swapCount = 0;
 
         for (int c = 0; c < COLS; c++) {
-            //first find a valid pivot
+
             Pivot pivot = findValidPivot(grid, c);
 
-            if (pivot.row() == -1) { //valid, non-zero pivot not found in column, hence the determiInfinite/undefined valuet is zero
+            if (pivot.row() == -1) {
                 return 0.0;
             }
 
@@ -489,13 +492,8 @@ public class Matrix {
                 swapCount++;
             }
 
-            //if it lies on diagonal, no swaps needed (covered in findValidPivot method)
-            // otherwise, swap pivot row with the row at index 'c'.
-            //increment swap count
-
-            //then iterate over subsequent elements of column c.
             for (int rowCursor = c + 1; rowCursor < ROWS; rowCursor++) {
-                //calculate row reduction factor and apply to entire row
+
                 for (int i = 0; i < grid[rowCursor].length; i++) {
 
                     double factor = grid[rowCursor][c] / grid[c][c];

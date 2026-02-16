@@ -141,7 +141,6 @@ public class InPlaceOperationsTest {
 
             assertEquals(copyOfB, B);
         }
-
     }
 
     @Nested
@@ -212,6 +211,65 @@ public class InPlaceOperationsTest {
 
             assertEquals(copyOfB, B);
         }
+    }
+
+    @Nested
+    class TransposeInPlace {
+
+        @Test
+        @DisplayName("Transposes square matrices correctly.")
+        void doesInPlaceTransposeWork() {
+            Matrix A = Matrix.ofRows(
+                    new double[] {-1,-2},
+                    new double[] {-3,-4}
+            );
+            A.transposeInPlace();
+            Matrix expected1 = Matrix.ofRows(
+                    new double[] {-1,-3},
+                    new double[] {-2,-4}
+            );
+            assertEquals(expected1, A);
+
+            Matrix I3x3 = Matrix.createIdentityMatrix(3);
+            I3x3.transposeInPlace();
+            Matrix expected2 = Matrix.ofRows(
+                    new double[] {1,0,0},
+                    new double[] {0,1,0},
+                    new double[] {0,0,1}
+            );
+            assertEquals(expected2, I3x3);
+
+            Matrix B = Matrix.ofRows(
+                    new double[] {1,2,3},
+                    new double[] {4,5,6},
+                    new double[] {7,8,9}
+            );
+            B.transposeInPlace();
+            Matrix expected3 = Matrix.ofRows(
+                    new double[]{1, 4, 7},
+                    new double[]{2, 5, 8},
+                    new double[]{3, 6, 9}
+            );
+            assertEquals(expected3, B);
+
+            Matrix singleton = new Matrix(new double[][]{{1}});
+            singleton.transposeInPlace();
+            Matrix expected4 = Matrix.ofRows(new double[]{1});
+            assertEquals(expected4, singleton);
+
+        }
+
+        @Test
+        @DisplayName("In place matrix transposition throws for rectangular matrix")
+        void transposeInPlaceThrowsForRectangular() {
+            Matrix rectangular = Matrix.ofRows(
+                    new double[]{1, 2, 3},
+                    new double[]{4, 5, 6}
+            );
+
+            assertThrows(MatrixException.class, rectangular::transposeInPlace);
+        }
+
     }
 
 

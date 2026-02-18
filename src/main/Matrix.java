@@ -150,6 +150,10 @@ public final class Matrix {
             throw MatrixException.infiniteValue();
         }
 
+        if (almostEqual(k,0)) {
+            return new Matrix(nrows, ncols);
+        }
+
         double[][] res = new double[nrows][ncols];
         for (int i = 0; i < nrows; i++) {
             Arrays.fill(res[i], k);
@@ -158,11 +162,7 @@ public final class Matrix {
         return new Matrix(res);
     }
 
-    public static Matrix zeroMatrix(int nrows, int ncols) {
-        return constant(nrows, ncols, 0.0);
-    }
-
-    public void nullMatrixInPlace() {
+    public void zeroMatrixInPlace() {
         fillInPlace(0.0);
     }
 
@@ -173,6 +173,10 @@ public final class Matrix {
 
         if (nrows <= 0) {
             throw MatrixException.illegalDimensions();
+        }
+
+        if (almostEqual(k,0)) {
+            return new Matrix(nrows);
         }
 
         double[][] result = new double[nrows][nrows];
@@ -271,12 +275,12 @@ public final class Matrix {
             throw MatrixException.infiniteValue();
         }
 
-        if (k == 1.0) {
+        if (almostEqual(k, 1.0)) {
             return;
         }
 
-        if (k == 0.0) {
-            this.nullMatrixInPlace();
+        if (almostEqual(k,0.0)) {
+            this.zeroMatrixInPlace();
             return;
         }
 
@@ -298,7 +302,7 @@ public final class Matrix {
 
         for (int r = 0; r < this.rows; r++) {
             for (int c = 0; c < this.columns; c++) {
-                this.entries[r][c] += other.getValue(r, c);
+                this.entries[r][c] += other.entries[r][c];
             }
         }
     }
@@ -314,7 +318,7 @@ public final class Matrix {
 
         for (int r = 0; r < this.rows; r++) {
             for (int c = 0; c < this.columns; c++) {
-                this.entries[r][c] -= other.getValue(r, c);
+                this.entries[r][c] -= other.entries[r][c];
             }
         }
     }
@@ -339,11 +343,11 @@ public final class Matrix {
             throw MatrixException.infiniteValue();
         }
 
-        if (k == 0.0) {
-            return zeroMatrix(this.rows, this.columns);
+        if (almostEqual(k,0.0)) {
+            return new Matrix(this.rows, this.columns);
         }
 
-        if (k == 1.0) {
+        if (almostEqual(k,1.0)) {
             return new Matrix(this.entries);
         }
 
@@ -368,7 +372,7 @@ public final class Matrix {
         double[][] result = new double[other.rows][other.columns];
         for (int r = 0; r < result.length; r++) {
             for (int c = 0; c < result[0].length; c++) {
-                result[r][c] = this.getValue(r, c) + other.getValue(r, c);
+                result[r][c] = this.entries[r][c] + other.entries[r][c];
             }
         }
         return new Matrix(result);
@@ -402,15 +406,15 @@ public final class Matrix {
         }
 
         if (this.isZeroMatrix() || other.isZeroMatrix()) {
-            return zeroMatrix(this.rows, other.columns);
+            return new Matrix(this.rows, other.columns);
         }
 
         double[][] product = new double[this.rows][other.columns];
 
-        for (int i = 0; i < this.rows; i++) {
-            for (int j = 0; j < other.columns; j++) {
-                double[] jthColumn = other.getColumn(j);
-                product[i][j] = dotProduct(this.entries[i], jthColumn); //og: jthColumn
+        for (int j = 0; j < other.columns; j++) {
+            double[] jthColumn = other.getColumn(j);
+            for (int i = 0; i < this.rows; i++) {
+                product[i][j] = dotProduct(this.entries[i], jthColumn);
             }
         }
 
@@ -424,10 +428,6 @@ public final class Matrix {
     // ==== NUMERICAL METHODS ====
 
     public Matrix inverse() {
-
-        if (isJaggedGrid(this.entries)) {
-            throw MatrixException.jaggedMatrix(getMismatchedRowIndex(this.entries));
-        }
 
         if (!isSquareMatrix()) {
             throw MatrixException.requireSquareMatrix();
@@ -470,10 +470,6 @@ public final class Matrix {
     }
 
     public double determinant() {
-        if (isJaggedGrid(this.entries)) {
-            throw MatrixException.jaggedMatrix(getMismatchedRowIndex(this.entries));
-        }
-
         if (!this.isSquareMatrix()) {
             throw MatrixException.requireSquareMatrix();
         }
@@ -484,6 +480,10 @@ public final class Matrix {
 
         if (this.rows == 2 && this.columns == 2) { //2x2 square matrix
             return (this.entries[0][0] * this.entries[1][1]) - (this.entries[0][1] * this.entries[1][0]);
+        }
+
+        if (this.isUpperTriangular()) {
+            return diagonalProduct(this.entries);
         }
 
         double[][] grid = deepGridCopy(this.entries); //copying to preserve original
@@ -574,26 +574,6 @@ public final class Matrix {
         return almostEqual(determinant(), 0.0);
     }
 
-    public boolean preceeds(Matrix other) {
-        if (other == null) {
-            throw new IllegalArgumentException("Matrix operand must be non-null.");
-        }
-
-        if (!this.getOrder().equals(other.getOrder())) {
-            return false;
-        }
-
-        double[][] tempGrid = other.getEntries();
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < columns; j++) {
-                if (this.entries[i][j] > tempGrid[i][j]) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
     public boolean isSymmetric() {
         for (int i = 0; i < this.rows; i++) {
             for (int j = i+1; j < this.columns; j++) {
@@ -652,10 +632,6 @@ public final class Matrix {
     }
 
     private List<Double> getLowerTriangle() {
-        if (!this.isSquareMatrix()) {
-            throw MatrixException.requireSquareMatrix();
-        }
-
         List<Double> result = new ArrayList<>();
         for (int i = 0; i < this.rows; i++) {
             for (int j = 0; j < this.columns; j++) {
@@ -668,10 +644,6 @@ public final class Matrix {
     }
 
     private List<Double> getUpperTriangle() {
-        if (!this.isSquareMatrix()) {
-            throw MatrixException.requireSquareMatrix();
-        }
-
         List<Double> result = new ArrayList<>();
         for (int i = 0; i < this.rows; i++) {
             for (int j = 0; j < this.columns; j++) {
@@ -706,9 +678,6 @@ public final class Matrix {
 
     private double[] getColumn(int n) {
 
-        if (!colInRange(n)) {
-            throw new IndexOutOfBoundsException(String.format("Column index %d is out of bounds for Matrix of order %s", n, order));
-        }
         double[] col = new double[this.rows];
         for (int i = 0; i < this.rows; i++) {
             col[i] = this.entries[i][n];
@@ -726,10 +695,6 @@ public final class Matrix {
 
 
     private static int getMismatchedRowIndex(double[][] grid) {
-        if (grid.length == 0) {
-            throw new IllegalArgumentException("Matrix grid must be non-empty.");
-        }
-
         int refSize = grid[0].length;
         for (int i = 1; i < grid.length; i++) {
             if (grid[i].length != refSize) {
@@ -740,10 +705,6 @@ public final class Matrix {
     }
 
     private static int getMismatchedRowIndex(List<List<Double>> grid) {
-        if (grid == null) {
-            throw new IllegalArgumentException("Matrix grid must be non-null.");
-        }
-
         int refSize = grid.getFirst().size();
         for (int i = 1; i < grid.size(); i++) {
             if (grid.get(i).size() != refSize) {
@@ -820,16 +781,6 @@ public final class Matrix {
         double[] temp = grid[c];
         grid[c] = grid[row];
         grid[row] = temp;
-    }
-
-    private boolean isDiagonalElement(double value) {
-        for (int i = 0; i < this.rows; i++) {
-            double diagonalElement = this.entries[i][i];
-            if (almostEqual(diagonalElement, value)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private static double diagonalProduct(double[][] grid) {

@@ -79,7 +79,7 @@ public class OutOfPlaceOperationsTest {
             assertEquals(result1, expected);
 
             Matrix result2 = A.multiplyByScalar(0.0);
-            Matrix expected2 = Matrix.zeroMatrix(2, 2);
+            Matrix expected2 = new Matrix(2, 2);
             assertEquals(result2, expected2);
 
             assertThrows(MatrixException.class, () -> A.multiplyByScalar(Double.NaN));
@@ -122,10 +122,10 @@ public class OutOfPlaceOperationsTest {
             assertEquals(expected, idealPathResult);
 
             Matrix addingToNegativeSelf = A.add(A.multiplyByScalar(-1));
-            Matrix expected2 = Matrix.zeroMatrix(2,2);
+            Matrix expected2 = new Matrix(2,2);
             assertEquals(expected2, addingToNegativeSelf);
 
-            Matrix addingToZeroMatrix = A.add(Matrix.zeroMatrix(2,2));
+            Matrix addingToZeroMatrix = A.add(new Matrix(2,2));
             Matrix expected3 = new Matrix(A);
             assertEquals(expected3, addingToZeroMatrix);
 
@@ -165,7 +165,7 @@ public class OutOfPlaceOperationsTest {
         @Test
         void subtract_self_returnsZero() {
             Matrix result = A.subtract(A);
-            Matrix expected = Matrix.zeroMatrix(2,2);
+            Matrix expected = new Matrix(2,2);
             assertEquals(expected, result);
         }
 
@@ -254,12 +254,12 @@ public class OutOfPlaceOperationsTest {
         void transposeWorksForSpecialMatrices() {
             Matrix specialTranspose1 = Matrix.createIdentityMatrix(3).transpose();
             Matrix specialTranspose2 = Matrix.createScalarMatrix(3, 5).transpose();
-            Matrix specialTranspose3 = Matrix.zeroMatrix(3,3).transpose();
+            Matrix specialTranspose3 = new Matrix(3,3).transpose();
             Matrix specialTranspose4 = Matrix.constant(2,3,5).transpose();
 
             Matrix expected1 = Matrix.createIdentityMatrix(3);
             Matrix expected2 = Matrix.createScalarMatrix(3,5);
-            Matrix expected3 = Matrix.zeroMatrix(3,3);
+            Matrix expected3 = new Matrix(3,3);
             Matrix expected4 = Matrix.constant(3,2,5);
 
             assertEquals(expected1, specialTranspose1);

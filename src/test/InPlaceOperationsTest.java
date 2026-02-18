@@ -22,7 +22,7 @@ public class InPlaceOperationsTest {
 
             A.multiplyByScalarInPlace(0.0);
 
-            Matrix expected = Matrix.zeroMatrix(2,2);
+            Matrix expected = new Matrix(2,2);
 
             assertEquals(expected, A);
         }

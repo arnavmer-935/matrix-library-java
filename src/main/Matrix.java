@@ -3,11 +3,10 @@ import java.util.*;
 
 /*
 * //TODO
-* 1. Add test cases for Matrix Multiplication
-* 2. Add test cases for, and debug, determinant and inverse methods
-* 3. Add test cases for query methods
-* 4. Documentation and polish readme
-* 5. Tag release
+* 1. Add test cases for (and potentially debug), determinant and inverse methods
+* 2. Add test cases for query methods
+* 3. Documentation and polish readme
+* 4. Tag release
 */
 
 public final class Matrix {
@@ -873,21 +872,6 @@ public final class Matrix {
 
         Matrix o = (Matrix)other;
         return this.equalsMatrix(o);
-    }
-
-    //----DRIVER FOR PRINTING TESTS----
-    public static void main(String[] args) {
-        Matrix A = Matrix.ofRows(
-                new double[] {1,2},
-                new double[] {3,4}
-        );
-        Matrix B = Matrix.ofRows(
-                new double[] {5,6},
-                new double[] {7,8}
-        );
-
-        Matrix C = A.multiply(B);
-        System.out.println(C);
     }
 }
 

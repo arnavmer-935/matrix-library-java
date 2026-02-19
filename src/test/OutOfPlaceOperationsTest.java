@@ -297,40 +297,138 @@ public class OutOfPlaceOperationsTest {
 
     @Nested
     class MultiplicationTest {
-        //for product to be accurate: test result dimensions based on oeprands, check for out-of-place
-        //actual equality of result and expected
-        //check for square matrix multiplied with itself
-        //check for rectangular squaring throw
-        @Test
-        @DisplayName("Multiplication works correctly for 2x2 and 3x3.")
 
+        @Test
+        @DisplayName("Multiplication works correctly for 2x2 matrices")
         void multiplicationTestFor2x2() {
 
             Matrix result1 = A.multiply(B);
             Matrix expected1 = Matrix.ofRows(
-                    new double[] {19,22},
-                    new double[] {43, 50}
+                    new double[]{19, 22},
+                    new double[]{43, 50}
             );
 
             assertEquals(2, result1.getRows());
-            assertEquals(2, result1.getColumns()); //dim checks
-
+            assertEquals(2, result1.getColumns());
             assertEquals(expected1, result1);
 
             Matrix result2 = A.multiply(A);
             Matrix expected2 = Matrix.ofRows(
-                    new double[] {7,10},
-                    new double[] {15,22}
+                    new double[]{7, 10},
+                    new double[]{15, 22}
             );
 
-            assertEquals(result2, expected2);
-
+            assertEquals(expected2, result2);
         }
 
         @Test
-        @DisplayName("Multiplication Test for 3x3")
+        @DisplayName("Multiplication works correctly for 3x3 matrices")
         void multiplicationTestFor3x3() {
 
+            Matrix result = D.multiply(D);
+
+            Matrix expected = Matrix.ofRows(
+                    new double[]{30, 36, 42},
+                    new double[]{66, 81, 96},
+                    new double[]{102, 126, 150}
+            );
+
+            assertEquals(3, result.getRows());
+            assertEquals(3, result.getColumns());
+            assertEquals(expected, result);
+        }
+
+        @Test
+        @DisplayName("Rectangular multiplication produces correct dimensions and values")
+        void rectangularValidMultiplication() {
+
+            Matrix result = rectangular.multiply(rectangular2.transpose());
+
+            Matrix expected = Matrix.ofRows(
+                    new double[]{28, 10},
+                    new double[]{73, 28}
+            );
+
+            assertEquals(2, result.getRows());
+            assertEquals(2, result.getColumns());
+            assertEquals(expected, result);
+        }
+
+        @Test
+        @DisplayName("Identity matrix does not change matrix when multiplied")
+        void identityMultiplication() {
+
+            Matrix left = identity2x2.multiply(A);
+            Matrix right = A.multiply(identity2x2);
+
+            assertEquals(A, left);
+            assertEquals(A, right);
+        }
+
+        @Test
+        @DisplayName("Multiplication by zero matrix produces zero matrix")
+        void zeroMatrixMultiplication() {
+
+            Matrix zero = Matrix.ofRows(
+                    new double[]{0, 0},
+                    new double[]{0, 0}
+            );
+
+            Matrix result = A.multiply(zero);
+
+            Matrix expected = Matrix.ofRows(
+                    new double[]{0, 0},
+                    new double[]{0, 0}
+            );
+
+            assertEquals(expected, result);
+        }
+
+        @Test
+        @DisplayName("Matrix multiplication is not commutative")
+        void nonCommutativityTest() {
+
+            Matrix ab = A.multiply(C);
+            Matrix ba = C.multiply(A);
+
+            assertNotEquals(ab, ba);
+        }
+
+        @Test
+        @DisplayName("Invalid dimension multiplication throws exception")
+        void invalidDimensionMultiplication() {
+
+            assertThrows(MatrixException.class, () -> A.multiply(D));
+
+            assertThrows(MatrixException.class,
+                    () -> rectangular.multiply(rectangular2));
+        }
+
+        @Test
+        @DisplayName("Multiplying with null throws exception")
+        void nullMultiplicationThrows() {
+
+            assertThrows(IllegalArgumentException.class,
+                    () -> A.multiply(null));
+        }
+
+        @Test
+        @DisplayName("Out-of-place multiplication does not mutate operands")
+        void immutabilityTest() {
+
+            Matrix originalA = Matrix.ofRows(
+                    new double[]{1, 2},
+                    new double[]{3, 4}
+            );
+
+            A.multiply(B);
+
+            assertEquals(originalA, A);
+            assertEquals(Matrix.ofRows(
+                    new double[]{5, 6},
+                    new double[]{7, 8}
+            ), B);
         }
     }
+
 }

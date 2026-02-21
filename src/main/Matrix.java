@@ -3,7 +3,7 @@ import java.util.*;
 
 /*
 * //TODO
-* 1. Add test cases for (and potentially debug), determinant and inverse methods
+* 1. Add test cases for (and potentially debug) inverse methods
 * 2. Add test cases for query methods
 * 3. Documentation and polish readme
 * 4. Tag release

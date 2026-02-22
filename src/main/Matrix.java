@@ -20,6 +20,8 @@ public final class Matrix {
     }
 
     private static class Pivot {
+
+        private static final double PIVOT_TOLERANCE = 1e-12;
         double value;
         int rowIndex;
         int colIndex;
@@ -759,7 +761,7 @@ public final class Matrix {
 
     private Pivot findValidPivot(double[][] grid, int colIdx) {
 
-        if (!almostEqual(grid[colIdx][colIdx], 0.0)) {
+        if (Math.abs(grid[colIdx][colIdx]) > Pivot.PIVOT_TOLERANCE) {
             return new Pivot(grid[colIdx][colIdx], colIdx, colIdx, false);
         }
 
@@ -869,5 +871,6 @@ public final class Matrix {
         Matrix o = (Matrix)other;
         return this.equalsMatrix(o);
     }
+
 }
 

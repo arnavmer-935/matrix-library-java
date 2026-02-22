@@ -141,4 +141,38 @@ public class InverseTest {
         assertTrue(swapA.multiply(invA).isIdentityMatrix());
         assertTrue(swapB.multiply(invB).isIdentityMatrix());
     }
+
+    @Test
+    @DisplayName("Non-square matrices throw exception.")
+    void nonSquareMatrixThrowsException() {
+        assertThrows(MatrixException.class, () -> nonSquare2x3.inverse());
+    }
+
+    @Test
+    @DisplayName("Small floating point matrix inverse is numerically stable.")
+    void inverseHandlesFloatingPointStability() {
+        Matrix inv = smallFloating3x3.inverse();
+        Matrix product = smallFloating3x3.multiply(inv);
+
+        assertTrue(product.isIdentityMatrix());
+    }
+
+    @Test
+    @DisplayName("Inverse consistency check on ugly 4x4.")
+    void inverseOfUgly4x4IsConsistent() {
+        Matrix inv1 = ugly4x4.inverse();
+        Matrix inv2 = ugly4x4.inverse();
+
+        assertEquals(inv1, inv2);
+        assertTrue(ugly4x4.multiply(inv1).isIdentityMatrix());
+    }
+
+    @Test
+    @DisplayName("Inverse works for matrix requiring multiple row swaps.")
+    void inverseOfMultiSwap4x4Works() {
+        Matrix inv = multiSwap4x4.inverse();
+        Matrix product = multiSwap4x4.multiply(inv);
+
+        assertTrue(product.isIdentityMatrix());
+    }
 }

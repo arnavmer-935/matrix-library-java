@@ -3,8 +3,8 @@ import java.util.*;
 
 /*
 * //TODO
-* 1. Add test cases for query methods
-* 2. Documentation and polish readme
+* 1. Add final test cases for query methods
+* 2. Javadoc, design choice rationales, and polish readme
 * 3. Tag release
 */
 
@@ -75,7 +75,7 @@ public final class Matrix {
 
     public Matrix(List<List<Double>> grid) {
 
-        if (grid == null) {
+        if (grid == null || containsNullRows(grid)) {
             throw new IllegalArgumentException("Matrix grid must be non-null.");
         }
 
@@ -88,35 +88,26 @@ public final class Matrix {
         }
 
         this.rows = grid.size();
-        this.columns = grid.getFirst().size();
+        this.columns = grid.get(0).size();
         this.order = new Pair(rows, columns);
         this.entries = new double[rows][columns];
 
         for (int i = 0; i < rows; i++) {
             List<Double> ithRow = grid.get(i);
-            if (ithRow == null) {
-                throw new IllegalArgumentException("Matrix grid must be non-null.");
-            }
-
             for (int j = 0; j < columns; j++) {
-                if (!Double.isFinite(ithRow.get(j))) {
+                double value = ithRow.get(j);
+
+                if (!Double.isFinite(value)) {
                     throw new IllegalArgumentException("Infinite/undefined value at coordinates " + new Pair(i,j));
                 }
-                
-                this.entries[i][j] = ithRow.get(j);
+                this.entries[i][j] = value;
             }
         }
     }
 
     //Constructor for square matrix
     public Matrix(int nrows) {
-        if (nrows <= 0) {
-            throw MatrixException.illegalDimensions();
-        }
-        this.rows = nrows;
-        this.columns = nrows;
-        this.order = new Pair(rows, rows);
-        this.entries = new double[rows][columns];
+        this(nrows, nrows);
     }
 
     //deep copy constructor
@@ -784,6 +775,15 @@ public final class Matrix {
 
     private static boolean containsNullRows(double[][] grid) {
         for (double[] row : grid) {
+            if (row == null) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean containsNullRows(List<List<Double>> grid) {
+        for (List<Double> row : grid) {
             if (row == null) {
                 return true;
             }

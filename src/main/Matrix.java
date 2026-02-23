@@ -3,10 +3,9 @@ import java.util.*;
 
 /*
 * //TODO
-* 1. Add test cases for (and potentially debug) inverse methods
-* 2. Add test cases for query methods
-* 3. Documentation and polish readme
-* 4. Tag release
+* 1. Add test cases for query methods
+* 2. Documentation and polish readme
+* 3. Tag release
 */
 
 public final class Matrix {
@@ -471,7 +470,7 @@ public final class Matrix {
     }
 
     public double determinant() {
-        if (!this.isSquareMatrix()) {
+        if (!isSquareMatrix()) {
             throw MatrixException.requireSquareMatrix();
         }
 
@@ -546,7 +545,7 @@ public final class Matrix {
     }
 
     public boolean isUpperTriangular() {
-        for (Double x : this.getLowerTriangle()) {
+        for (Double x : getLowerTriangle()) {
             if ((!almostEqual(x, 0.0))) {
                 return false;
             }
@@ -555,7 +554,7 @@ public final class Matrix {
     }
 
     public boolean isLowerTriangular() {
-        for (Double x : this.getUpperTriangle()) {
+        for (Double x : getUpperTriangle()) {
             if (!almostEqual(x,0.0)) {
                 return false;
             }
@@ -576,6 +575,11 @@ public final class Matrix {
     }
 
     public boolean isSymmetric() {
+
+        if (!isSquareMatrix()) {
+            return false;
+        }
+
         for (int i = 0; i < this.rows; i++) {
             for (int j = i+1; j < this.columns; j++) {
                 if (!almostEqual(entries[i][j], entries[j][i])) {
@@ -587,6 +591,11 @@ public final class Matrix {
     }
 
     public boolean isSkewSymmetric() {
+
+        if (!isSquareMatrix()) {
+            return false;
+        }
+
         if (!onlyZeroesInDiagonal()) {
             return false;
         }
@@ -648,7 +657,7 @@ public final class Matrix {
         List<Double> result = new ArrayList<>();
         for (int i = 0; i < this.rows; i++) {
             for (int j = 0; j < this.columns; j++) {
-                if (i <= j) {
+                if (i < j) {
                     result.add(entries[i][j]);
                 }
             }

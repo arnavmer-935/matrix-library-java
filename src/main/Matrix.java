@@ -280,12 +280,12 @@ public final class Matrix {
         }
 
         if (almostEqual(k,0.0)) {
-            this.zeroMatrixInPlace();
+            zeroMatrixInPlace();
             return;
         }
 
-        for (int i = 0; i < this.rows; i++) {
-            for (int j = 0; j < this.columns; j++) {
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
                 entries[i][j] *= k;
             }
         }
@@ -296,12 +296,12 @@ public final class Matrix {
             throw new IllegalArgumentException("Matrix operands must be non-null.");
         }
 
-        if (!this.getOrder().equals(other.getOrder())) {
+        if (!this.order.equals(other.order)) {
             throw MatrixException.orderMismatch();
         }
 
-        for (int r = 0; r < this.rows; r++) {
-            for (int c = 0; c < this.columns; c++) {
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < columns; c++) {
                 this.entries[r][c] += other.entries[r][c];
             }
         }
@@ -312,24 +312,24 @@ public final class Matrix {
             throw new IllegalArgumentException("Matrix operands must be non-null.");
         }
 
-        if (!this.getOrder().equals(other.getOrder())) {
+        if (!this.order.equals(other.order)) {
             throw MatrixException.orderMismatch();
         }
 
-        for (int r = 0; r < this.rows; r++) {
-            for (int c = 0; c < this.columns; c++) {
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < columns; c++) {
                 this.entries[r][c] -= other.entries[r][c];
             }
         }
     }
 
     public void transposeInPlace() {
-        if (!this.isSquareMatrix()) {
+        if (!isSquareMatrix()) {
             throw MatrixException.requireSquareMatrix();
         }
 
         for (int i = 0; i < rows; i++) {
-            for (int j = i+1; j < columns; j++) {
+            for (int j = i + 1; j < columns; j++) {
                 double temp = entries[i][j];
                 entries[i][j] = entries[j][i];
                 entries[j][i] = temp;
@@ -344,17 +344,17 @@ public final class Matrix {
         }
 
         if (almostEqual(k,0.0)) {
-            return new Matrix(this.rows, this.columns);
+            return new Matrix(rows, columns);
         }
 
         if (almostEqual(k,1.0)) {
-            return new Matrix(this.entries);
+            return new Matrix(entries);
         }
 
         double[][] result = new double[this.rows][this.columns];
         for (int i = 0; i < result.length; i++) {
             for (int j = 0; j < result[0].length; j++) {
-                result[i][j] = this.getValue(i,j) * k;
+                result[i][j] = (this.entries[i][j] * k);
             }
         }
         return new Matrix(result);
@@ -365,14 +365,14 @@ public final class Matrix {
             throw new IllegalArgumentException("Matrix operand must be non-null.");
         }
 
-        if (!this.getOrder().equals(other.getOrder())) {
+        if (!this.order.equals(other.order)) {
             throw MatrixException.orderMismatch();
         }
 
         double[][] result = new double[other.rows][other.columns];
         for (int r = 0; r < result.length; r++) {
             for (int c = 0; c < result[0].length; c++) {
-                result[r][c] = this.entries[r][c] + other.entries[r][c];
+                result[r][c] = (this.entries[r][c] + other.entries[r][c]);
             }
         }
         return new Matrix(result);
@@ -388,8 +388,8 @@ public final class Matrix {
     public Matrix transpose() { //used for transposing rectangular matrices
         double[][] transposedGrid = new double[this.columns][this.rows];
 
-        for (int i = 0; i < this.rows; i++) {
-            for (int j = 0; j < this.columns; j++) {
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
                 transposedGrid[j][i] = this.entries[i][j];
             }
         }
@@ -474,15 +474,15 @@ public final class Matrix {
             throw MatrixException.requireSquareMatrix();
         }
 
-        if (this.rows == 1 && this.columns == 1) { //single element matrix
-            return this.entries[0][0];
+        if (rows == 1 && columns == 1) { //single element matrix
+            return entries[0][0];
         }
 
-        if (this.rows == 2 && this.columns == 2) { //2x2 square matrix
-            return (this.entries[0][0] * this.entries[1][1]) - (this.entries[0][1] * this.entries[1][0]);
+        if (rows == 2 && columns == 2) { //2x2 square matrix
+            return (entries[0][0] * entries[1][1]) - (entries[0][1] * entries[1][0]);
         }
 
-        if (this.isUpperTriangular()) {
+        if (isUpperTriangular()) {
             return diagonalProduct(this.entries);
         }
 
@@ -524,50 +524,55 @@ public final class Matrix {
     }
 
     public boolean isIdentityMatrix() {
-        if (!this.isSquareMatrix()) {
+        if (!isSquareMatrix()) {
             return false;
         }
 
-        for (int i = 0; i < this.rows; ++i) {
-            if (!almostEqual(entries[i][i], 1.0)) {
-                return false;
-            }
-        }
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < columns; c++) {
 
-        for (int r = 0; r < this.rows; r++) {
-            for (int c = 0; c < this.columns; c++) {
-                if (r != c && !almostEqual(entries[r][c], 0)) {
-                    return false;
-                }
+                if (r != c && !almostEqual(entries[r][c], 0)) return false;
+                if (r == c && !almostEqual(entries[r][c], 1.0)) return false;
+
             }
         }
         return true;
     }
 
     public boolean isUpperTriangular() {
-        for (Double x : getLowerTriangle()) {
-            if ((!almostEqual(x, 0.0))) {
-                return false;
+        if (!isSquareMatrix()) {
+            return false;
+        }
+
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < i; j++) {
+                if (!almostEqual(entries[i][j], 0.0)) return false;
             }
         }
+
         return true;
     }
 
     public boolean isLowerTriangular() {
-        for (Double x : getUpperTriangle()) {
-            if (!almostEqual(x,0.0)) {
-                return false;
+        if (!isSquareMatrix()) {
+            return false;
+        }
+
+        for (int i = 0; i < rows; i++) {
+            for (int j = i+1; j < columns; j++) {
+                if (!almostEqual(entries[i][j], 0.0)) return false;
             }
         }
+
         return true;
     }
 
     public boolean isZeroMatrix() {
-        return this.areAllEqual(0.0);
+        return areAllEqual(0.0);
     }
 
     public boolean isConstantMatrix() {
-        return this.areAllEqual(entries[0][0]);
+        return areAllEqual(entries[0][0]);
     }
 
     public boolean isSingular() {
@@ -580,8 +585,8 @@ public final class Matrix {
             return false;
         }
 
-        for (int i = 0; i < this.rows; i++) {
-            for (int j = i+1; j < this.columns; j++) {
+        for (int i = 0; i < rows; i++) {
+            for (int j = i+1; j < columns; j++) {
                 if (!almostEqual(entries[i][j], entries[j][i])) {
                     return false;
                 }
@@ -639,30 +644,6 @@ public final class Matrix {
         for (int i = 0; i < this.rows; i++) {
             Arrays.fill(entries[i], k);
         }
-    }
-
-    private List<Double> getLowerTriangle() {
-        List<Double> result = new ArrayList<>();
-        for (int i = 0; i < this.rows; i++) {
-            for (int j = 0; j < this.columns; j++) {
-                if (i > j) {
-                    result.add(entries[i][j]);
-                }
-            }
-        }
-        return result;
-    }
-
-    private List<Double> getUpperTriangle() {
-        List<Double> result = new ArrayList<>();
-        for (int i = 0; i < this.rows; i++) {
-            for (int j = 0; j < this.columns; j++) {
-                if (i < j) {
-                    result.add(entries[i][j]);
-                }
-            }
-        }
-        return result;
     }
 
     private boolean areAllEqual(double k) {
@@ -735,7 +716,7 @@ public final class Matrix {
 
     private boolean equalsMatrix(Matrix other) {
         if (this == other) return true;
-        if (other == null || !this.getOrder().equals(other.getOrder())) return false;
+        if (other == null || !this.order.equals(other.order)) return false;
 
         double[][] tempGrid = other.getEntries();
         for (int i = 0; i < this.rows; i++) {
@@ -749,11 +730,11 @@ public final class Matrix {
     }
 
     private boolean rowInRange(int rowIndex) {
-        return 0 <= rowIndex && rowIndex < this.rows;
+        return 0 <= rowIndex && rowIndex < rows;
     }
 
     private boolean colInRange(int colIndex) {
-        return 0 <= colIndex && colIndex < this.columns;
+        return 0 <= colIndex && colIndex < columns;
     }
 
     private double[][] deepGridCopy(double[][] grid) {

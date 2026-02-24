@@ -46,6 +46,7 @@ public final class Matrix {
     }
 
     private static final double TOLERANCE = 1e-6;
+
     private final int rows;
     private final int columns;
     private final Pair order;
@@ -64,7 +65,7 @@ public final class Matrix {
         this.entries = new double[rows][columns];
     }
 
-    public Matrix(double[][] grid) throws MatrixException {
+    public Matrix(double[][] grid) {
 
         validateGrid(grid);
         this.entries = deepGridCopy(grid);

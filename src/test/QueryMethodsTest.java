@@ -2,7 +2,10 @@ package test;
 
 import main.Matrix;
 import main.MatrixException;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class QueryMethodsTest {
@@ -127,5 +130,50 @@ public class QueryMethodsTest {
         assertTrue(nearIdentity3.isIdentityMatrix());
         assertFalse(notIdentity3.isIdentityMatrix());
         assertFalse(rectangular3x2.isIdentityMatrix());
+    }
+
+    @Test
+    @DisplayName("Upper triangular detection works correctly.")
+    void upperTriangularDetectionWorks() {
+        assertTrue(upper3.isUpperTriangular());
+        assertFalse(notTriangular3.isUpperTriangular());
+        assertFalse(rectangular3x2.isUpperTriangular());
+    }
+
+    @Test
+    @DisplayName("Lower triangular detection works correctly.")
+    void lowerTriangularDetectionWorks() {
+        assertTrue(lower3.isLowerTriangular());
+        assertFalse(notTriangular3.isLowerTriangular());
+        assertFalse(rectangular3x2.isLowerTriangular());
+    }
+
+    @Test
+    @DisplayName("Zero and constant matrix detection works.")
+    void zeroAndConstantChecksWork() {
+        assertTrue(zero3.isZeroMatrix());
+        assertTrue(constant3.isConstantMatrix());
+        assertFalse(square3x3.isZeroMatrix());
+        assertFalse(square3x3.isConstantMatrix());
+    }
+
+    @Test
+    @DisplayName("Symmetric and skew-symmetric detection works.")
+    void symmetryChecksWork() {
+        assertTrue(symmetric3.isSymmetric());
+        assertFalse(nonSymmetric3.isSymmetric());
+        assertFalse(rectangular3x2.isSymmetric());
+
+        assertTrue(skewSymmetric3.isSkewSymmetric());
+        assertFalse(symmetric3.isSkewSymmetric());
+        assertFalse(rectangular3x2.isSkewSymmetric());
+    }
+
+    @Test
+    @DisplayName("Singular detection works correctly.")
+    void singularCheckWorks() {
+        assertTrue(singular3.isSingular());
+        assertFalse(nonSingular3.isSingular());
+        assertThrows(MatrixException.class, () -> rectangular3x2.isSingular());
     }
 }

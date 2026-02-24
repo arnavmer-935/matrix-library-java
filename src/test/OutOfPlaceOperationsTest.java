@@ -430,4 +430,98 @@ public class OutOfPlaceOperationsTest {
         }
     }
 
+    @Nested
+    class SymmetricDecompositionTest {
+
+        @Test
+        @DisplayName("Symmetric part computed correctly for 2x2 matrix")
+        void symmetricPart_correct() {
+            Matrix S = A.symmetricPart();
+
+            Matrix expected = Matrix.ofRows(
+                    new double[]{1, 2.5},
+                    new double[]{2.5, 4}
+            );
+
+            assertEquals(expected, S);
+            assertTrue(S.isSymmetric());
+        }
+
+        @Test
+        @DisplayName("Skew-symmetric part computed correctly for 2x2 matrix")
+        void skewSymmetricPart_correct() {
+            Matrix K = A.skewSymmetricPart();
+
+            Matrix expected = Matrix.ofRows(
+                    new double[]{0, -0.5},
+                    new double[]{0.5, 0}
+            );
+
+            assertEquals(expected, K);
+
+            Matrix negativeTranspose = K.transpose().multiplyByScalar(-1);
+            assertTrue(K.isSkewSymmetric());
+        }
+
+        @Test
+        @DisplayName("Decomposition reconstructs original matrix")
+        void decomposition_reconstructsOriginal() {
+            Matrix S = A.symmetricPart();
+            Matrix K = A.skewSymmetricPart();
+
+            Matrix reconstructed = S.add(K);
+
+            assertEquals(A, reconstructed);
+        }
+
+        @Test
+        @DisplayName("Symmetric matrix has zero skew part")
+        void symmetricMatrix_skewPartZero() {
+            Matrix symmetric = Matrix.ofRows(
+                    new double[]{1, 2},
+                    new double[]{2, 3}
+            );
+
+            Matrix skew = symmetric.skewSymmetricPart();
+            Matrix zero = new Matrix(2, 2);
+
+            assertEquals(zero, skew);
+        }
+
+        @Test
+        @DisplayName("Skew-symmetric matrix has zero symmetric part")
+        void skewMatrix_symmetricPartZero() {
+            Matrix skew = Matrix.ofRows(
+                    new double[]{0, 2},
+                    new double[]{-2, 0}
+            );
+
+            Matrix symmetric = skew.symmetricPart();
+            Matrix zero = new Matrix(2, 2);
+
+            assertEquals(zero, symmetric);
+        }
+
+        @Test
+        @DisplayName("Non-square matrix throws for symmetric and skew methods")
+        void nonSquareThrows() {
+            assertThrows(MatrixException.class,
+                    () -> rectangular.symmetricPart());
+
+            assertThrows(MatrixException.class,
+                    () -> rectangular.skewSymmetricPart());
+        }
+
+        @Test
+        @DisplayName("Methods do not mutate original matrix")
+        void immutabilityCheck() {
+            Matrix original = new Matrix(A);
+
+            A.symmetricPart();
+            A.skewSymmetricPart();
+
+            assertEquals(original, A);
+        }
+    }
+
 }

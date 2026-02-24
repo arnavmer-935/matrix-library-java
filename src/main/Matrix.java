@@ -3,9 +3,8 @@ import java.util.*;
 
 /*
 * //TODO
-* 1. Add final test cases for query methods
-* 2. Javadoc, design choice rationales, and polish readme
-* 3. Tag release
+* 1. Javadoc, design choice rationales, and polish readme
+* 2. Tag release
 */
 
 public final class Matrix {
@@ -416,6 +415,27 @@ public final class Matrix {
     public double[][] toArray() {
         return deepGridCopy(this.entries);
     }
+
+    public Matrix symmetricPart() {
+        if (!isSquareMatrix()) {
+            throw MatrixException.requireSquareMatrix();
+        }
+
+        Matrix result = this.add(this.transpose());
+        result.multiplyByScalarInPlace(0.5);
+        return result;
+    }
+
+    public Matrix skewSymmetricPart() {
+        if (!isSquareMatrix()) {
+            throw MatrixException.requireSquareMatrix();
+        }
+
+        Matrix result = this.subtract(this.transpose());
+        result.multiplyByScalarInPlace(0.5);
+        return result;
+    }
+
 
     // ==== NUMERICAL METHODS ====
 

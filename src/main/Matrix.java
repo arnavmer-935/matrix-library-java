@@ -1,48 +1,10 @@
 package main;
-import java.util.*;
-
-/*
-* //TODO
-* 1. Javadoc, design choice rationales, and polish readme
-* 2. Tag release
-*/
+import java.util.Arrays;
+import java.util.List;
 
 public final class Matrix {
 
     // ==== INSTANCE VARIABLES AND DECLARATIONS ====
-    private record Pair(int x, int y) {
-        @Override
-        public String toString() {
-            return String.format("(%d, %d)", x, y);
-        }
-    }
-
-    private static class Pivot {
-
-        private static final double PIVOT_TOLERANCE = 1e-12;
-        double value;
-        int rowIndex;
-        int colIndex;
-        boolean swapsNeeded;
-
-        Pivot() { //when valid pivot cannot be found
-            value = 0.0;
-            rowIndex = -1;
-            colIndex = -1;
-            swapsNeeded = false;
-        }
-
-        Pivot(double v, int r, int c, boolean s) {
-            value = v;
-            rowIndex = r;
-            colIndex = c;
-            swapsNeeded = s;
-        }
-
-
-        int row() { return rowIndex; }
-        boolean swapsNeeded() { return swapsNeeded; }
-    }
 
     private static final double TOLERANCE = 1e-6;
 
@@ -51,19 +13,41 @@ public final class Matrix {
     private final Pair order;
     private final double[][] entries;
 
-
     // ==== MATRIX CREATION METHODS ====
+
+    /**
+     * The fundamental constructor for a Matrix instance. Takes a positive number of rows and columns as arguments.
+     * Each entry is initialzied to {@code 0.0000} by default.
+     *
+     * @throws MatrixException if either the number of rows or columns is non-positive.
+     * @param nrows the number of rows in the Matrix.
+     * @param ncols the number of columns in the Matrix.
+     */
     public Matrix(int nrows, int ncols) {
         if (nrows <= 0 || ncols <= 0) {
             throw MatrixException.illegalDimensions();
         }
-        
+
         this.rows = nrows;
         this.columns = ncols;
         this.order = new Pair(rows, columns);
         this.entries = new double[rows][columns];
     }
 
+
+    /**
+     * A Matrix Constructor which creates a Matrix instance, given a valid 2-dimensional primitive array.
+     * Uses the {@code validateGrid(double[][] grid)} method to check for {@code null} references, {@code null} rows in the 2D array,
+     * uneven row lengths, and any Infinite values in the 2D array.
+     *
+     * Stores a deep copy of the input grid as its {@code entries} to guard against aliasing and unintentionally mutating the
+     * Matrix instance.
+     *
+     * @throws IllegalArgumentException if the grid is invalid based on the above requirements.
+     * @throws MatrixException if the 2D array is empty, has empty rows or Infinite values anywhere.
+     *
+     * @param grid a primitive 2D array of {@code double} values.
+     */
     public Matrix(double[][] grid) {
 
         validateGrid(grid);
@@ -73,6 +57,18 @@ public final class Matrix {
         this.order = new Pair(rows, columns);
     }
 
+    /**
+     * A Matrix Constructor which creates a Matrix instance given a valid, 2-dimensional nested {@code List<Double>}.
+     * Validates the {@code grid} by checking for {@code null} references, {@code null} rows in the 2D {@code List},
+     * uneven row lengths, and any Infinite values in the 2D {@code List}.
+     *
+     * Stores a deep copy of the input grid as its {@code entries} to guard against aliasing and unintentionally mutating the
+     * Matrix instance.
+     *
+     * @throws IllegalArgumentException if the grid is {@code null} or contains any {@code null} references.
+     * @throws MatrixException if the 2D {@code List} is empty, has empty rows, or contains Infinite values anywhere.
+     * @param grid a boxed, 2D {@code List} of {@code Double} values.
+     */
     public Matrix(List<List<Double>> grid) {
 
         if (grid == null || containsNullRows(grid)) {
@@ -105,33 +101,85 @@ public final class Matrix {
         }
     }
 
-    //Constructor for square matrix
+    /**
+     * A condensed constructor for intializing a new Matrix instance with an equal number of rows and columns.
+     * Takes a positive integer number of rows as argument, and reuses it for the number of columns.
+     * Relies on the fundamental constructor to create the instance.
+     *
+     * @throws MatrixException if either the number of rows or columns is non-positive.
+     * @param nrows the number of rows in the Matrix.
+     * @param ncols the number of columns in the Matrix.
+     */
     public Matrix(int nrows) {
         this(nrows, nrows);
     }
 
-    //deep copy constructor
+
+    /**
+     * The copy constructor for existing, non-null Matrix instances. It is used for the quick deep copying of existing Matrix
+     * instances. Since constructors strictly enforce the creation of valid Matrix instances, we only check for {@code null}
+     * references before initializing the copy.
+     * To ensure accurate deep copying, we use a deep copy of the existing Matrix instance's {@code entries}
+     * (through the {@code toArray()} method) and pass that into the primitive grid constructor.
+     *
+     * @throws IllegalArgumentException if the existing Matrix is a null reference.
+     * @param A the Matrix instance that needs to be deep copied.
+     */
     public Matrix(Matrix A) {
         this(getValidMatrix(A));
     }
 
+
+    /**
+     * The factory method which creates a Matrix instance based on any positive number of primitive 1D {@code double} arrays.
+     * Uses the {@code validateGrid(double[][] grid)} method to check for {@code null} references, {@code null} rows in the 2D array,
+     * uneven row lengths, and any Infinite values in the 2D array.
+     * Stores a deep copy of the input grid as its entries to guard against aliasing and unintentionally mutating the
+     * Matrix instance.
+     *
+     * @throws IllegalArgumentException if the series of rows is {@code null}, or has {@code null} rows.
+     * @throws MatrixException if any of these rows do not have even, non-zero lengths, or contain Infinite values.
+     *
+     * @param rows the series of all {@code double[] rows} to be used for creating the Matrix.
+     * @return a Matrix instance created using the input {@code rows}.
+     */
     public static Matrix ofRows(double[]... rows) {
-        validateGrid(rows);
-        double[][] result = new double[rows.length][rows[0].length];
-
-        for (int i = 0; i < rows.length; i++) {
-            for (int j = 0; j < rows[0].length; j++) {
-                result[i][j] = rows[i][j];
-            }
-        }
-
-        return new Matrix(result);
+        return new Matrix(rows);
     }
 
+    /**
+     * The factory method which creates a Matrix instance based on any positive number of primitive 1D {@code double} arrays.
+     * Here, these input arrays are treated not as rows, but as potential columns of the Matrix instance.
+     * Uses the {@code validateGrid(double[][] grid)} method to check for {@code null} references, {@code null} rows in the 2D array,
+     * uneven row lengths, and any Infinite values in the 2D array.
+     *
+     * Stores a deep copy of the input grid as its entries to guard against aliasing and unintentionally mutating the
+     * Matrix instance.
+     *
+     * @throws IllegalArgumentException if the series of {@code columns} is {@code null} or has {@code null} rows.
+     * @throws MatrixException if any of these columns do not have even, non-zero lengths, or contain Infinite values
+     *
+     * @param rows the series of all {@code double[] columns} to be used for creating the Matrix.
+     * @return a Matrix instance created using the input columns.
+     */
     public static Matrix ofColumns(double[]... columns) {
         return Matrix.ofRows(columns).transpose();
     }
 
+
+    /**
+     * The factory method which creates a Matrix instance with a given number of rows and columns,
+     * where all entries are the same scalar {@code k}.
+     *
+     * @throws MatrixException if the entered dimensions are not positive, or if the given scalar is an Infinite value.
+     *
+     * @param nrows the number of rows in the Matrix.
+     * @param ncols the number of columns in the Matrix.
+     * @param k the constant, finite value which is to be used across all entries in the Matrix.
+     *
+     * @return an {@code nrows} x {@code ncols} Matrix where all entries are equal to {@code k}.
+     * Returns a zero Matrix if {@code k} is less than the {@code TOLERANCE} value.
+     */
     public static Matrix constant(int nrows, int ncols, double k) {
         if (nrows <= 0 || ncols <= 0) {
             throw MatrixException.illegalDimensions();
@@ -153,6 +201,15 @@ public final class Matrix {
         return new Matrix(res);
     }
 
+
+    /**
+     * Mutates this matrix by setting all entries to {@code 0.0}.
+     *
+     * The dimensions of the matrix remain unchanged.
+     * This operation does not allocate a new matrix.
+     *
+     * Time Complexity: O(m * n)
+     */
     public void zeroMatrixInPlace() {
         fillInPlace(0.0);
     }
@@ -840,6 +897,40 @@ public final class Matrix {
         }
 
         return A.toArray();
+    }
+
+    private record Pair(int x, int y) {
+        @Override
+        public String toString() {
+            return String.format("(%d, %d)", x, y);
+        }
+    }
+
+    private static class Pivot {
+
+        private static final double PIVOT_TOLERANCE = 1e-12;
+        double value;
+        int rowIndex;
+        int colIndex;
+        boolean swapsNeeded;
+
+        Pivot() { //when valid pivot cannot be found
+            value = 0.0;
+            rowIndex = -1;
+            colIndex = -1;
+            swapsNeeded = false;
+        }
+
+        Pivot(double v, int r, int c, boolean s) {
+            value = v;
+            rowIndex = r;
+            colIndex = c;
+            swapsNeeded = s;
+        }
+
+
+        int row() { return rowIndex; }
+        boolean swapsNeeded() { return swapsNeeded; }
     }
 
     // ==== OBJECT METHODS ====

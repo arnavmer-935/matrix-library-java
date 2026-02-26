@@ -16,12 +16,19 @@ public final class Matrix {
     // ==== MATRIX CREATION METHODS ====
 
     /**
-     * The fundamental constructor for a Matrix instance. Takes a positive number of rows and columns as arguments.
-     * Each entry is initialzied to {@code 0.0000} by default.
+     * Constructs a matrix with the specified number of rows and columns.
+     * All entries are initialized to {@code 0.0}.
      *
-     * @throws MatrixException if either the number of rows or columns is non-positive.
-     * @param nrows the number of rows in the Matrix.
-     * @param ncols the number of columns in the Matrix.
+     * This constructor allocates a new Matrix instance and does not mutate
+     * any existing Matrix.
+     *
+     * @param nrows the number of rows; must be strictly positive.
+     * @param ncols the number of columns; must be strictly positive.
+     *
+     * @throws MatrixException if {@code nrows} <= 0 or {@code ncols} <= 0
+     *
+     * @return a newly constructed matrix of dimensions {@code nrows} x {@code ncols}
+     *
      */
     public Matrix(int nrows, int ncols) {
         if (nrows <= 0 || ncols <= 0) {
@@ -36,17 +43,33 @@ public final class Matrix {
 
 
     /**
-     * A Matrix Constructor which creates a Matrix instance, given a valid 2-dimensional primitive array.
-     * Uses the {@code validateGrid(double[][] grid)} method to check for {@code null} references, {@code null} rows in the 2D array,
-     * uneven row lengths, and any Infinite values in the 2D array.
+     * Constructs a matrix from a two-dimensional primitive {@code double} array.
      *
-     * Stores a deep copy of the input grid as its {@code entries} to guard against aliasing and unintentionally mutating the
-     * Matrix instance.
+     * The input array is validated to ensure that:
+     * 2D array references are not {@code null},
+     * no row reference is {@code null},
+     * the array contains at least one row,
+     * each row contains at least one column,
+     * all rows have identical lengths,
+     * no element is {@code NaN} or infinite.
      *
-     * @throws IllegalArgumentException if the grid is invalid based on the above requirements.
-     * @throws MatrixException if the 2D array is empty, has empty rows or Infinite values anywhere.
+     * A deep copy of the provided array is created. Subsequent modification
+     * of the input array does not affect this matrix. This constructor does
+     * not mutate any external data structure.
      *
-     * @param grid a primitive 2D array of {@code double} values.
+     * @param grid a non-null rectangular 2D array of {@code double} values with at least
+     *             one row and one column and no {@code NaN} or infinite values
+     *
+     * @throws IllegalArgumentException if grid is {@code null}, contains a {@code null} row,
+     *                                  or contains rows of unequal length
+     * @throws MatrixException if {@code grid.length == 0}, any row has length {@code 0},
+     *                         or any element is {@code NaN} or infinite
+     *
+     * @return a newly constructed matrix of dimensions
+     *         {@code grid.length} x {@code grid[0].length}
+     *
+     * Time Complexity: O(m * n), where m = {@code grid.length} and
+     * n = {@code grid[0].length}
      */
     public Matrix(double[][] grid) {
 
@@ -58,16 +81,35 @@ public final class Matrix {
     }
 
     /**
-     * A Matrix Constructor which creates a Matrix instance given a valid, 2-dimensional nested {@code List<Double>}.
-     * Validates the {@code grid} by checking for {@code null} references, {@code null} rows in the 2D {@code List},
-     * uneven row lengths, and any Infinite values in the 2D {@code List}.
+     * Constructs a matrix from a two-dimensional nested {@code List<Double>}.
      *
-     * Stores a deep copy of the input grid as its {@code entries} to guard against aliasing and unintentionally mutating the
-     * Matrix instance.
+     * The input structure is validated to ensure:
+     * the outer list reference is non-null,
+     * no row list reference is null,
+     * the outer list contains at least one row,
+     * each row contains at least one element,
+     * all rows have identical sizes,
+     * no element is null,
+     * no element is {@code NaN} or infinite.
      *
-     * @throws IllegalArgumentException if the grid is {@code null} or contains any {@code null} references.
-     * @throws MatrixException if the 2D {@code List} is empty, has empty rows, or contains Infinite values anywhere.
-     * @param grid a boxed, 2D {@code List} of {@code Double} values.
+     * A deep copy of the provided data is created and stored internally.
+     * Subsequent modification of the input lists does not affect this matrix.
+     * This constructor does not mutate the provided lists.
+     *
+     * @param grid a non-null rectangular {@code List<List<Double>>}
+     *             containing at least one row and one column, with no
+     *             null, {@code NaN}, or infinite values
+     *
+     * @throws IllegalArgumentException if {@code grid} is {@code null},
+     *                                  contains a {@code null} row,
+     *                                  or contains a {@code null} element
+     * @throws MatrixException if {@code grid} is empty,
+     *                         any row is empty,
+     *                         rows have unequal sizes,
+     *                         or any value is {@code NaN} or infinite
+     *
+     * @return a newly constructed matrix of dimensions
+     *         {@code grid.size()} x {@code grid.get(0).size()}
      */
     public Matrix(List<List<Double>> grid) {
 
@@ -102,18 +144,25 @@ public final class Matrix {
     }
 
     /**
-     * A condensed constructor for intializing a new Matrix instance with an equal number of rows and columns.
-     * Takes a positive integer number of rows as argument, and reuses it for the number of columns.
-     * Relies on the fundamental constructor to create the instance.
+     * Constructs a square matrix with the specified dimension.
      *
-     * @throws MatrixException if either the number of rows or columns is non-positive.
-     * @param nrows the number of rows in the Matrix.
-     * @param ncols the number of columns in the Matrix.
+     * This constructor initializes a matrix with {@code nrows} rows and
+     * {@code nrows} columns. All entries are initialized to {@code 0.0}.
+     * Internally delegates to the primary constructor.
+     *
+     * This constructor creates a new matrix instance and does not mutate
+     * any existing matrix.
+     *
+     * @param nrows the number of rows and columns; must be strictly positive
+     *
+     * @throws MatrixException if {@code nrows <= 0}
+     *
+     * @return a newly constructed square matrix of dimensions
+     *         nrows × nrows
      */
     public Matrix(int nrows) {
         this(nrows, nrows);
     }
-
 
     /**
      * The copy constructor for existing, non-null Matrix instances. It is used for the quick deep copying of existing Matrix
@@ -131,36 +180,62 @@ public final class Matrix {
 
 
     /**
-     * The factory method which creates a Matrix instance based on any positive number of primitive 1D {@code double} arrays.
-     * Uses the {@code validateGrid(double[][] grid)} method to check for {@code null} references, {@code null} rows in the 2D array,
-     * uneven row lengths, and any Infinite values in the 2D array.
-     * Stores a deep copy of the input grid as its entries to guard against aliasing and unintentionally mutating the
-     * Matrix instance.
+     * Creates a matrix from a variable number of primitive {@code double[]} rows.
      *
-     * @throws IllegalArgumentException if the series of rows is {@code null}, or has {@code null} rows.
-     * @throws MatrixException if any of these rows do not have even, non-zero lengths, or contain Infinite values.
+     * The provided rows are interpreted as the rows of the resulting matrix.
+     * The input is validated to ensure that:
+     * the outer array reference is non-null,
+     * no row reference is {@code null},
+     * at least one row is provided,
+     * each row has positive length,
+     * all rows have identical lengths,
+     * no element is {@code NaN} or infinite.
      *
-     * @param rows the series of all {@code double[] rows} to be used for creating the Matrix.
-     * @return a Matrix instance created using the input {@code rows}.
+     * A deep copy of the provided rows is created. Subsequent modification
+     * of the input arrays does not affect the returned matrix. This method
+     * does not mutate the provided arrays.
+     *
+     * @param rows a non-null sequence of {@code double[]} arrays representing
+     *             matrix rows; must form a non-empty rectangular structure
+     *             with no {@code NaN} or infinite values.
+     *
+     * @return a new matrix of dimensions {@code rows.length} × {@code rows[0].length}
+     *
+     * @throws IllegalArgumentException if {@code rows} is null or
+     *                                  contains a null row
+     * @throws MatrixException if no rows are provided,
+     *                         any row has length 0,
+     *                         rows have unequal lengths,
+     *                         or any value is {@code NaN} or infinite
      */
     public static Matrix ofRows(double[]... rows) {
         return new Matrix(rows);
     }
 
     /**
-     * The factory method which creates a Matrix instance based on any positive number of primitive 1D {@code double} arrays.
-     * Here, these input arrays are treated not as rows, but as potential columns of the Matrix instance.
-     * Uses the {@code validateGrid(double[][] grid)} method to check for {@code null} references, {@code null} rows in the 2D array,
-     * uneven row lengths, and any Infinite values in the 2D array.
+     * Creates a matrix from a variable number of {@code double[]} arrays,
+     * interpreted as columns of the resulting matrix.
      *
-     * Stores a deep copy of the input grid as its entries to guard against aliasing and unintentionally mutating the
-     * Matrix instance.
+     * The input must be non-null, contain at least one column, form a
+     * rectangular structure with equal non-zero lengths, and contain
+     * no {@code NaN} or infinite values.
      *
-     * @throws IllegalArgumentException if the series of {@code columns} is {@code null} or has {@code null} rows.
-     * @throws MatrixException if any of these columns do not have even, non-zero lengths, or contain Infinite values
+     * A deep copy of the provided column data is created. The input
+     * arrays are not mutated.
      *
-     * @param rows the series of all {@code double[] columns} to be used for creating the Matrix.
-     * @return a Matrix instance created using the input columns.
+     * If {@code k} columns of length {@code m} are provided, the
+     * resulting matrix has dimensions {@code m × k}.
+     *
+     * @param columns non-null column arrays forming a non-empty
+     *                rectangular matrix
+     *
+     * @return a new matrix constructed from the given columns
+     *
+     * @throws IllegalArgumentException if {@code columns} is null
+     *                                  or contains a null column reference
+     * @throws MatrixException if no columns are provided,
+     *                         column lengths differ or are zero,
+     *                         or any value is {@code NaN} or infinite
      */
     public static Matrix ofColumns(double[]... columns) {
         return Matrix.ofRows(columns).transpose();
@@ -168,17 +243,25 @@ public final class Matrix {
 
 
     /**
-     * The factory method which creates a Matrix instance with a given number of rows and columns,
-     * where all entries are the same scalar {@code k}.
+     * Creates a matrix of specified dimensions in which every entry is
+     * initialized to the scalar {@code k}.
      *
-     * @throws MatrixException if the entered dimensions are not positive, or if the given scalar is an Infinite value.
+     * The dimensions must be strictly positive. The scalar must be finite.
+     * If {@code |k| < TOLERANCE} (in this case, {@code 1e-6}), the resulting matrix is
+     * treated as a zero matrix.
      *
-     * @param nrows the number of rows in the Matrix.
-     * @param ncols the number of columns in the Matrix.
-     * @param k the constant, finite value which is to be used across all entries in the Matrix.
+     * This method returns a new matrix instance and does not mutate
+     * any existing matrix.
      *
-     * @return an {@code nrows} x {@code ncols} Matrix where all entries are equal to {@code k}.
-     * Returns a zero Matrix if {@code k} is less than the {@code TOLERANCE} value.
+     * @param nrows the number of rows; must be strictly positive
+     * @param ncols the number of columns; must be strictly positive
+     * @param k the finite scalar value assigned to each entry
+     *
+     * @return a new {@code nrows × ncols} matrix with all entries equal to {@code k},
+     *         or the zero matrix if {@code |k| < TOLERANCE}
+     *
+     * @throws MatrixException if {@code nrows <= 0}, {@code ncols <= 0},
+     *                         or {@code k} is {@code NaN} or infinite
      */
     public static Matrix constant(int nrows, int ncols, double k) {
         if (nrows <= 0 || ncols <= 0) {
@@ -214,6 +297,28 @@ public final class Matrix {
         fillInPlace(0.0);
     }
 
+
+    /**
+     * Creates a square scalar matrix of dimension {@code nrows}.
+     *
+     * The resulting matrix has {@code k} on its main diagonal and
+     * {@code 0.0} on all off-diagonal entries. The dimension must be
+     * strictly positive and {@code k} must be finite.
+     *
+     * If {@code |k| < TOLERANCE} (in this case, {@code 1e-6}), the resulting matrix
+     * is treated as the zero matrix.
+     *
+     * This method returns a new matrix instance and does not mutate
+     * any existing matrix.
+     *
+     * @param nrows the number of rows and columns; must be strictly positive
+     * @param k the finite scalar value assigned to each diagonal entry
+     *
+     * @return a new {@code nrows × nrows} scalar matrix, or the zero matrix
+     *         if {@code |k| < TOLERANCE}
+     *
+     * @throws MatrixException if {@code nrows <= 0} or {@code k} is {@code NaN} or infinite
+     */
     public static Matrix createScalarMatrix(int nrows, double k) {
         if (!Double.isFinite(k)) {
             throw MatrixException.infiniteValue();
@@ -235,6 +340,23 @@ public final class Matrix {
         return new Matrix(result);
     }
 
+
+    /**
+     * Creates an {@code nrows × nrows} identity matrix.
+     *
+     * The resulting matrix has {@code 1.0} on its main diagonal and
+     * {@code 0.0} on all off-diagonal entries. The dimension must be
+     * strictly positive.
+     *
+     * This method returns a new matrix instance and does not mutate
+     * any existing matrix.
+     *
+     * @param nrows the number of rows and columns; must be strictly positive
+     *
+     * @return a new {@code nrows × nrows} identity matrix
+     *
+     * @throws MatrixException if {@code nrows <= 0}
+     */
     public static Matrix createIdentityMatrix(int nrows) {
         return createScalarMatrix(nrows, 1.0);
     }
@@ -253,10 +375,47 @@ public final class Matrix {
 
     private double[][] getEntries() { return this.entries; }
 
+
+    /**
+     * Returns the entry at the specified row and column.
+     *
+     * Indices follow 0-based indexing.
+     * This method does not mutate the matrix.
+     *
+     * @param rowIndex the row index; must satisfy
+     *                 {@code 0 <= rowIndex < rows}
+     * @param colIndex the column index; must satisfy
+     *                 {@code 0 <= colIndex < columns}
+     *
+     * @return the value at position {@code (rowIndex, colIndex)}
+     *
+     * @throws IndexOutOfBoundsException if {@code rowIndex} or
+     *                                   {@code colIndex} is outside
+     *                                   the valid index range
+     */
     public double getEntry(int rowIndex, int colIndex) {
         return getValue(rowIndex, colIndex);
     }
 
+
+    /**
+     * Sets the entry at position {@code (r, c)} to the specified value.
+     *
+     * The value must be finite. Indices follow 0-based indexing and must
+     * refer to a valid position in the matrix.
+     *
+     * This operation mutates the matrix in place and modifies only the
+     * specified entry.
+     *
+     * @param value the finite value to assign to position {@code (r, c)}
+     * @param r the row index; must satisfy {@code 0 <= r < rows}
+     * @param c the column index; must satisfy {@code 0 <= c < columns}
+     *
+     * @throws IllegalArgumentException if {@code value} is {@code NaN}
+     *                                  or infinite
+     * @throws IndexOutOfBoundsException if {@code r} or {@code c}
+     *                                   is outside the valid index range
+     */
     public void setEntry(double value, int r, int c) {
         if (!isInBounds(r,c)) {
             throw new IndexOutOfBoundsException(String.format("Cell coordinates (%d, %d) out of bounds for Matrix of order %s", r, c, order));
@@ -269,6 +428,27 @@ public final class Matrix {
         this.entries[r][c] = value;
     }
 
+
+    /**
+     * Replaces the row at {@code rowIndex} with the specified values.
+     *
+     * The provided array must be non-null, have length equal to the
+     * number of columns in the matrix, and contain only finite values.
+     *
+     * This operation mutates the matrix in place and does not allocate
+     * additional matrix storage.
+     *
+     * @param row the non-null array of finite values whose length must
+     *            equal {@code columns}
+     * @param rowIndex the 0-based index of the row to replace; must satisfy
+     *                 {@code 0 <= rowIndex < rows}
+     *
+     * @throws IllegalArgumentException if {@code row} is null or contains
+     *                                  {@code NaN} or infinite values
+     * @throws MatrixException if {@code row.length != getColumnCount()}
+     * @throws IndexOutOfBoundsException if {@code rowIndex} is outside
+     *                                   the valid index range
+     */
     public void setRow(double[] row, int rowIndex) {
 
         if (row == null) {
@@ -292,6 +472,26 @@ public final class Matrix {
         this.entries[rowIndex] = row.clone();
     }
 
+    /**
+     * Replaces the column at {@code colIndex} with the specified values.
+     *
+     * The provided array must be non-null, have length equal to the
+     * number of rows in the matrix, and contain only finite values.
+     *
+     * This operation mutates the matrix in place and does not allocate
+     * additional matrix storage.
+     *
+     * @param col the non-null array of finite values whose length must
+     *            equal {@code rows}
+     * @param colIndex the 0-based index of the column to replace; must satisfy
+     *                 {@code 0 <= colIndex < rows}
+     *
+     * @throws IllegalArgumentException if {@code col} is null or contains
+     *                                  {@code NaN} or infinite values
+     * @throws MatrixException if {@code col.length != rows}
+     * @throws IndexOutOfBoundsException if {@code colIndex} is outside
+     *                                   the valid index range
+     */
     public void setColumn(double[] col, int colIndex) {
         if (col == null) {
             throw new IllegalArgumentException("Input column must be non-null.");
@@ -318,6 +518,17 @@ public final class Matrix {
     }
 
     // ==== IN-PLACE OPERATIONS ====
+
+
+    /**
+     * Scales each entry of this matrix by the finite real scalar {@code k}.
+     *
+     * This operation mutates {@code this} in-place and does not allocate
+     * a new matrix. The dimensions remain unchanged.
+     *
+     * @param k the scalar factor applied to each entry
+     * @throws MatrixException if {@code k} is infinite or {@code NaN}
+     */
     public void multiplyByScalarInPlace(double k) {
         if (!Double.isFinite(k)) {
             throw MatrixException.infiniteValue();
@@ -339,6 +550,23 @@ public final class Matrix {
         }
     }
 
+    /**
+     * Adds the entries of {@code other} to this matrix element-wise.
+     *
+     * Both matrices must be non-null and have identical dimensions.
+     *
+     * This operation mutates this matrix in place. The {@code other}
+     * matrix remains unchanged.
+     *
+     * @param other the matrix to be added; must be non-null and have
+     *              the same dimensions as this matrix
+     *
+     * @throws IllegalArgumentException if {@code other} is null
+     * @throws MatrixException if the dimensions of the matrices differ
+     *
+     * Time Complexity: O(m × n), where m = number of rows and
+     * n = number of columns
+     */
     public void addInPlace(Matrix other) {
         if (other == null) {
             throw new IllegalArgumentException("Matrix operands must be non-null.");
@@ -355,6 +583,23 @@ public final class Matrix {
         }
     }
 
+    /**
+     * Subtracts the entries of {@code other} from this matrix element-wise.
+     *
+     * Both matrices must be non-null and have identical dimensions.
+     *
+     * This operation mutates this matrix in place. The {@code other}
+     * matrix remains unchanged.
+     *
+     * @param other the matrix to be subtracted; must be non-null and have
+     *              the same dimensions as this matrix
+     *
+     * @throws IllegalArgumentException if {@code other} is null
+     * @throws MatrixException if the dimensions of the matrices differ
+     *
+     * Time Complexity: O(m × n), where m = number of rows and
+     * n = number of columns
+     */
     public void subtractInPlace(Matrix other) {
         if (other == null) {
             throw new IllegalArgumentException("Matrix operands must be non-null.");
@@ -371,6 +616,19 @@ public final class Matrix {
         }
     }
 
+    /**
+     * Transposes this matrix in place by reflecting it across its main diagonal.
+     *
+     * The matrix must be square. Each pair of symmetric off-diagonal
+     * elements {@code (i, j)} and {@code (j, i)} is swapped exactly once.
+     *
+     * This operation mutates the matrix in place and does not allocate
+     * additional matrix storage.
+     *
+     * @throws MatrixException if the matrix is not square
+     *
+     * Time Complexity: O(n^2), where n = number of rows (and columns)
+     */
     public void transposeInPlace() {
         if (!isSquareMatrix()) {
             throw MatrixException.requireSquareMatrix();

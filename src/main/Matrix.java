@@ -973,9 +973,37 @@ public final class Matrix {
         return result;
     }
 
-
     // ==== NUMERICAL METHODS ====
 
+    /**
+     * Computes and returns the inverse of this {@code Matrix}
+     * using Gauss–Jordan elimination with partial pivoting.
+     *
+     * <p>The algorithm augments this matrix with the identity matrix
+     * and performs row operations until the left side reduces to the
+     * identity matrix. The transformed right side then becomes the inverse.
+     *
+     * <p>Pivot selection uses a numerical tolerance of <strong>{@code 1e-12}</strong> to determine whether
+     * a pivot element is sufficiently non-zero. If no valid pivot can be
+     * found within this tolerance, the matrix is treated as singular.
+     *
+     * <p>It should be noted that Pivot Tolerance is different from the actual tolerance
+     * of {@code 1e-6} to ensure that leading entries less than {@code 1e-6} can be detected during row reduction.</p>
+     *
+     * <p>This method does <strong>not</strong> mutate {@code this}.
+     * A new {@code Matrix} instance is allocated to store the result.
+     *
+     * <p>This operation is only defined for square, non-singular matrices.
+     *
+     * <p><strong>Time Complexity:</strong> O(n³)<br>
+     * <strong>Space Complexity:</strong> O(n²)
+     *
+     * @return a new {@code Matrix} representing the inverse of {@code this}
+     *
+     * @throws MatrixException if this matrix is not square
+     * @throws MatrixException if this matrix is singular (including
+     *         cases where pivots fall below the numerical tolerance)
+     */
     public Matrix inverse() {
 
         if (!isSquareMatrix()) {
@@ -1018,6 +1046,34 @@ public final class Matrix {
 
     }
 
+    /**
+     * Computes and returns the determinant of this {@code Matrix}.
+     *
+     * <p>This method is only defined for square matrices.
+     *
+     * <p>For 1 × 1 and 2 × 2 matrices, the determinant is computed
+     * directly using closed-form expressions.
+     *
+     * <p>For larger matrices, the determinant is computed using
+     * Gaussian elimination with partial pivoting. The matrix is
+     * transformed into an upper triangular form, and the determinant
+     * is obtained as the product of the diagonal entries, adjusted
+     * for row swaps.
+     *
+     * <p>Pivot selection uses a numerical tolerance to determine
+     * whether a pivot element is sufficiently non-zero. If no valid
+     * pivot can be found within this tolerance, the determinant is
+     * treated as zero.
+     *
+     * <p>This operation does <strong>not</strong> mutate {@code this}.
+     *
+     * <p><strong>Time Complexity:</strong> O(n³)<br>
+     * <strong>Space Complexity:</strong> O(n²)
+     *
+     * @return the determinant of this {@code Matrix}
+     *
+     * @throws MatrixException if this matrix is not square
+     */
     public double determinant() {
         if (!isSquareMatrix()) {
             throw MatrixException.requireSquareMatrix();
@@ -1068,10 +1124,43 @@ public final class Matrix {
     }
 
     // ==== QUERY METHODS ====
+    /**
+     * Returns {@code true} if this {@code Matrix} is square.
+     *
+     * <p>A matrix is square if its number of rows is equal to
+     * its number of columns.
+     *
+     * <p><strong>Time Complexity:</strong> O(1)<br>
+     * <strong>Space Complexity:</strong> O(1)
+     *
+     * @return {@code true} if {@code this.rows == this.columns};
+     *         {@code false} otherwise
+     */
     public boolean isSquareMatrix() {
         return this.rows == this.columns;
     }
 
+    /**
+     * Returns {@code true} if this {@code Matrix} represents
+     * the identity matrix.
+     *
+     * <p>A matrix is considered an identity matrix if:
+     * <ul>
+     *   <li>It is square.</li>
+     *   <li>All diagonal entries are approximately equal to 1.0.</li>
+     *   <li>All off-diagonal entries are approximately equal to 0.0.</li>
+     * </ul>
+     *
+     * <p>Comparisons are performed using the class's numerical tolerance of
+     * {@code 1e-6} to account for floating-point rounding behavior.
+     *
+     * <p><strong>Time Complexity:</strong> O(n²)<br>
+     * <strong>Space Complexity:</strong> O(1)
+     *
+     * @return {@code true} if this matrix is approximately an
+     *         identity matrix within the configured tolerance;
+     *         {@code false} otherwise
+     */
     public boolean isIdentityMatrix() {
         if (!isSquareMatrix()) {
             return false;
@@ -1088,6 +1177,25 @@ public final class Matrix {
         return true;
     }
 
+    /**
+     * Returns {@code true} if this {@code Matrix} is upper triangular.
+     *
+     * <p>A matrix is considered upper triangular if:
+     * <ul>
+     *   <li>It is square.</li>
+     *   <li>All entries strictly below the main diagonal are
+     *       approximately equal to 0.0.</li>
+     * </ul>
+     *
+     * <p>Comparisons are performed using the class's configured
+     * numerical tolerance to account for floating-point rounding behavior.
+     *
+     * <p><strong>Time Complexity:</strong> O(n²)<br>
+     * <strong>Space Complexity:</strong> O(1)
+     *
+     * @return {@code true} if this matrix is approximately upper
+     *         triangular; {@code false} otherwise
+     */
     public boolean isUpperTriangular() {
         if (!isSquareMatrix()) {
             return false;
@@ -1102,6 +1210,25 @@ public final class Matrix {
         return true;
     }
 
+    /**
+     * Returns {@code true} if this {@code Matrix} is lower triangular.
+     *
+     * <p>A matrix is considered lower triangular if:
+     * <ul>
+     *   <li>It is square.</li>
+     *   <li>All entries strictly above the main diagonal are
+     *       approximately equal to 0.0.</li>
+     * </ul>
+     *
+     * <p>Comparisons are performed using the class's configured
+     * numerical tolerance to account for floating-point rounding behavior.
+     *
+     * <p><strong>Time Complexity:</strong> O(n²)<br>
+     * <strong>Space Complexity:</strong> O(1)
+     *
+     * @return {@code true} if this matrix is approximately lower
+     *         triangular; {@code false} otherwise
+     */
     public boolean isLowerTriangular() {
         if (!isSquareMatrix()) {
             return false;
@@ -1116,18 +1243,80 @@ public final class Matrix {
         return true;
     }
 
+    /**
+     * Returns {@code true} if all entries of this {@code Matrix}
+     * are approximately equal to 0.0.
+     *
+     * <p>Comparisons are performed using the class's configured
+     * numerical tolerance to account for floating-point rounding behavior.
+     *
+     * <p><strong>Time Complexity:</strong> O(mn)<br>
+     * <strong>Space Complexity:</strong> O(1)
+     *
+     * @return {@code true} if all entries are approximately zero;
+     *         {@code false} otherwise
+     */
     public boolean isZeroMatrix() {
         return areAllEqual(0.0);
     }
 
+    /**
+     * Returns {@code true} if all entries of this {@code Matrix}
+     * are approximately equal to the same constant value.
+     *
+     * <p>The first entry is used as the reference value. All other
+     * entries are compared against it using the class's configured
+     * numerical tolerance.
+     *
+     * <p><strong>Time Complexity:</strong> O(mn)<br>
+     * <strong>Space Complexity:</strong> O(1)
+     *
+     * @return {@code true} if all entries are approximately equal;
+     *         {@code false} otherwise
+     */
     public boolean isConstantMatrix() {
         return areAllEqual(entries[0][0]);
     }
 
+    /**
+     * Returns {@code true} if this {@code Matrix} is singular.
+     *
+     * <p>A matrix is singular if it is square and its determinant
+     * is approximately equal to 0.0.
+     *
+     * <p>Determinant comparison uses the class's configured numerical
+     * tolerance to account for floating-point rounding behavior.
+     *
+     * <p>If this matrix is not square, it is considered singular.
+     *
+     * <p><strong>Time Complexity:</strong> O(n³)<br>
+     * <strong>Space Complexity:</strong> O(n²)
+     *
+     * @return {@code true} if this matrix is singular;
+     *         {@code false} otherwise
+     */
     public boolean isSingular() {
         return almostEqual(determinant(), 0.0);
     }
 
+    /**
+     * Returns {@code true} if this {@code Matrix} is symmetric.
+     *
+     * <p>A matrix is considered symmetric if:
+     * <ul>
+     *   <li>It is square.</li>
+     *   <li>Each entry satisfies A[i][j] ≈ A[j][i].</li>
+     * </ul>
+     *
+     * <p>Comparisons are performed using the class's configured
+     * numerical tolerance to account for floating-point rounding behavior.
+     *
+     * <p><strong>Time Complexity:</strong> O(n²)<br>
+     * <strong>Space Complexity:</strong> O(1)
+     *
+     * @return {@code true} if this matrix is approximately symmetric;
+     *         {@code false} otherwise
+     */
     public boolean isSymmetric() {
 
         if (!isSquareMatrix()) {
@@ -1144,6 +1333,25 @@ public final class Matrix {
         return true;
     }
 
+    /**
+     * Returns {@code true} if this {@code Matrix} is skew-symmetric.
+     *
+     * <p>A matrix is considered skew-symmetric if:
+     * <ul>
+     *   <li>It is square.</li>
+     *   <li>Each entry satisfies A[i][j] ≈ -A[j][i].</li>
+     *   <li>All diagonal entries are approximately equal to 0.0.</li>
+     * </ul>
+     *
+     * <p>Comparisons are performed using the class's configured
+     * numerical tolerance to account for floating-point rounding behavior.
+     *
+     * <p><strong>Time Complexity:</strong> O(n²)<br>
+     * <strong>Space Complexity:</strong> O(1)
+     *
+     * @return {@code true} if this matrix is approximately skew-symmetric;
+     *         {@code false} otherwise
+     */
     public boolean isSkewSymmetric() {
 
         if (!isSquareMatrix()) {
@@ -1162,6 +1370,100 @@ public final class Matrix {
             }
         }
         return true;
+    }
+
+    // ==== OBJECT METHODS ====
+
+    /**
+     * Returns a string representation of this {@code Matrix}.
+     *
+     * <p>The returned string presents the matrix in row-major order,
+     * with each row on a separate line. Entries are formatted in a
+     * readable, aligned manner to aid debugging and inspection.
+     *
+     * <p>This method is intended for diagnostic purposes and does
+     * not guarantee a specific serialization format.
+     *
+     * <p><strong>Time Complexity:</strong> O(mn)<br>
+     * <strong>Space Complexity:</strong> O(mn)
+     *
+     * @return a human-readable string representation of this matrix
+     */
+    @Override
+    public String toString() {
+
+        String[][] formattedValues = new String[rows][columns];
+        int longestLength = 0;
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
+                String val = formattedValue(entries[i][j]);
+                longestLength = Math.max(longestLength, val.length());
+
+                formattedValues[i][j] = val;
+            }
+        }
+
+        StringBuilder res = new StringBuilder();
+        for (int r = 0; r < rows; r++) {
+            res.append("[ ");
+            for (int c = 0; c < columns; c++) {
+                res.append(String.format("%" + longestLength + "s", formattedValues[r][c]));
+                if (c < columns - 1) res.append("  ");
+            }
+            res.append(" ]\n");
+        }
+        return res.toString();
+    }
+
+    /**
+     * Returns a hash code for this {@code Matrix}.
+     *
+     * <p>The hash code is computed using the matrix dimensions
+     * and the exact values of its entries (via
+     * {@code Arrays.deepHashCode}).
+     *
+     * <p>This implementation is consistent with {@link #equals(Object)},
+     * which performs strict element-wise comparison without tolerance.
+     *
+     * <p><strong>Time Complexity:</strong> O(mn)<br>
+     * <strong>Space Complexity:</strong> O(1)
+     *
+     * @return a hash code value for this matrix
+     */
+    @Override
+    public int hashCode() {
+        return 31 * order.hashCode() + Arrays.deepHashCode(this.entries);
+    }
+
+    /**
+     * Compares this {@code Matrix} with the specified object for equality.
+     *
+     * <p>Two matrices are considered equal if and only if:
+     * <ul>
+     *   <li>The specified object is also a {@code Matrix}.</li>
+     *   <li>They have identical dimensions.</li>
+     *   <li>All corresponding entries are exactly equal.</li>
+     * </ul>
+     *
+     * <p>Entry comparison uses strict element-wise equality
+     * (via {@code Double.compare}), not tolerance-based comparison.
+     * Numerical tolerance is intentionally <strong>not</strong> applied
+     * in order to preserve the general {@code equals}/{@code hashCode}
+     * contract.
+     *
+     * <p><strong>Time Complexity:</strong> O(mn)<br>
+     * <strong>Space Complexity:</strong> O(1)
+     *
+     * @param obj the object to compare with
+     * @return {@code true} if the specified object represents a matrix
+     *         with identical dimensions and entries; {@code false} otherwise
+     */
+    @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof Matrix)) return false;
+
+        Matrix o = (Matrix)other;
+        return this.equalsMatrix(o);
     }
 
     // ==== HELPER METHODS ====
@@ -1413,45 +1715,6 @@ public final class Matrix {
         boolean swapsNeeded() { return swapsNeeded; }
     }
 
-    // ==== OBJECT METHODS ====
 
-    @Override
-    public String toString() {
-
-        String[][] formattedValues = new String[rows][columns];
-        int longestLength = 0;
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < columns; j++) {
-                String val = formattedValue(entries[i][j]);
-                longestLength = Math.max(longestLength, val.length());
-
-                formattedValues[i][j] = val;
-            }
-        }
-
-        StringBuilder res = new StringBuilder();
-        for (int r = 0; r < rows; r++) {
-            res.append("[ ");
-            for (int c = 0; c < columns; c++) {
-                res.append(String.format("%" + longestLength + "s", formattedValues[r][c]));
-                if (c < columns - 1) res.append("  ");
-            }
-            res.append(" ]\n");
-        }
-        return res.toString();
-    }
-
-    @Override
-    public int hashCode() {
-        return 31 * order.hashCode() + Arrays.deepHashCode(this.entries);
-    }
-
-    @Override
-    public boolean equals(Object other) {
-        if (!(other instanceof Matrix)) return false;
-
-        Matrix o = (Matrix)other;
-        return this.equalsMatrix(o);
-    }
 }
 

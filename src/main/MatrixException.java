@@ -1,5 +1,24 @@
 package main;
-
+/**
+ * An unchecked exception indicating that a matrix operation
+ * could not be completed due to invalid structure, dimensions,
+ * or numerical conditions.
+ * <p>
+ * Contains factory methods for throwing exceptions, with the aim
+ * to promote readability and reusability.
+ *
+ * <p>This exception is thrown in cases such as:
+ * <ul>
+ *   <li>Uneven row lengths during initialization</li>
+ *   <li>Dimension mismatches in arithmetic operations</li>
+ *   <li>Operations requiring a square matrix applied to a non-square matrix</li>
+ *   <li>Attempts to invert a singular matrix</li>
+ * </ul>
+ *
+ * <p>{@code MatrixException} extends {@code RuntimeException}
+ * and is intended to signal programming errors or invalid usage
+ * of the {@code Matrix} API.
+ */
 public class MatrixException extends RuntimeException {
     private MatrixException(String message) {
         super(message);

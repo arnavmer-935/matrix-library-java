@@ -784,13 +784,9 @@ public final class Matrix {
             return new Matrix(entries);
         }
 
-        double[][] result = new double[this.rows][this.columns];
-        for (int i = 0; i < result.length; i++) {
-            for (int j = 0; j < result[0].length; j++) {
-                result[i][j] = (this.entries[i][j] * k);
-            }
-        }
-        return new Matrix(result);
+        Matrix result = new Matrix(this);
+        result.multiplyByScalarInPlace(k);
+        return result;
     }
 
     /**
@@ -825,13 +821,9 @@ public final class Matrix {
             throw MatrixException.orderMismatch();
         }
 
-        double[][] result = new double[other.rows][other.columns];
-        for (int r = 0; r < result.length; r++) {
-            for (int c = 0; c < result[0].length; c++) {
-                result[r][c] = (this.entries[r][c] + other.entries[r][c]);
-            }
-        }
-        return new Matrix(result);
+        Matrix result = new Matrix(this);
+        result.addInPlace(other);
+        return result;
     }
 
 

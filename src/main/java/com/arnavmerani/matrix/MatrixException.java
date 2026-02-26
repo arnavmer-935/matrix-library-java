@@ -1,4 +1,4 @@
-package main;
+package main.java.com.arnavmerani.matrix;
 /**
  * An unchecked exception indicating that a matrix operation
  * could not be completed due to invalid structure, dimensions,

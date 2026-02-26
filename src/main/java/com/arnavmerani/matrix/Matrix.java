@@ -1,4 +1,4 @@
-package main;
+package main.java.com.arnavmerani.matrix;
 import java.util.Arrays;
 import java.util.List;
 
@@ -45,6 +45,8 @@ import java.util.List;
  * <p>This class is designed for correctness, clarity, and explicit
  * numerical behavior rather than high-performance optimized
  * computation.
+ *
+ * @author Arnav Vikram Merani
  */
 public final class Matrix {
 
@@ -1828,7 +1830,6 @@ public final class Matrix {
         int row() { return rowIndex; }
         boolean swapsNeeded() { return swapsNeeded; }
     }
-
 
 }
 

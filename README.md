@@ -1,53 +1,56 @@
 # Matrix.java
 
-A Java implementation of a fully functional matrix data structure supporting core linear algebra operations, including arithmetic, determinant computation, matrix inversion, and Gauss–Jordan row reduction.
+A numerically aware, row-major Java implementation of a fully functional matrix data structure supporting core linear algebra operations, structural queries, and explicit equality semantics.
 
 ---
 
 ## Features
 
-- Matrix addition and subtraction  
-- Matrix multiplication  
-- Scalar multiplication  
-- Determinant computation  
-- Matrix inverse (via Gauss–Jordan elimination)  
-- Row reduction to Reduced Row Echelon Form (RREF)  
-- In-place and out-of-place operation variants  
-- Strict dimension and argument validation  
-- Floating-point tolerance handling (~1e-6) for numerical stability  
+- Matrix addition and subtraction
+- Matrix multiplication
+- Scalar multiplication
+- Determinant computation (Gaussian elimination-based)
+- Matrix inverse (Gauss–Jordan elimination with partial pivoting)
+- Row reduction to Reduced Row Echelon Form (RREF)
+- Symmetric and skew-symmetric decomposition
+- Structural queries (square, triangular, symmetric, identity, etc.)
+- In-place and out-of-place operation variants
+- Strict dimension and argument validation
 
 ---
 
-## Implementation Highlights
+## Numerical Design
 
-- Determinant and inverse implemented using systematic row operations  
-- Pivot selection and row-swapping logic for stable elimination  
-- Defensive programming for singular and non-square matrices  
-- Clear API design separating mutating and non-mutating methods  
-- Emphasis on correctness and edge-case handling  
+- Structural and property checks use a configured floating-point tolerance (~1e-6) to account for rounding behavior.
+- Pivot detection during elimination uses a stricter tolerance to handle near-singular matrices.
+- `equals()` performs strict element-wise comparison using `Double.compare` (no tolerance).
+- `hashCode()` is consistent with strict equality semantics.
 
----
-
-## Testing
-
-- Validation against singular matrices and invalid dimensions  
-- Algebraic identity checks where applicable  
-- Incremental expansion of test coverage  
-- Numerical comparisons performed within defined tolerance bounds  
+This separation ensures numerical robustness while preserving the `equals`/`hashCode` contract.
 
 ---
 
-## Technical Focus
+## Mutability Model
 
-This project emphasizes:
-
-- Algorithm implementation from first principles  
-- Numerical reasoning and floating-point precision management  
-- Object-oriented design and API structuring  
-- Robust input validation and error handling  
+- Methods ending with `InPlace` mutate the current instance.
+- Non in-place methods return new `Matrix` instances and leave the original unchanged.
+- Internal storage is deeply owned; external mutation is prevented via defensive copying.
 
 ---
 
-## Motivation
+## Getting Started
 
-Developed to deepen understanding of linear algebra concepts through direct implementation, translating mathematical definitions into reliable, well-structured code.
+```java
+
+import com.arnavmerani.matrix
+
+Matrix A = Matrix.ofRows(new double[][] {
+    {1, 2},
+    {3, 4}
+});
+
+Matrix B = A.inverse();
+double det = A.determinant();
+
+Matrix C = A.multiply(B);
+System.out.println(C);

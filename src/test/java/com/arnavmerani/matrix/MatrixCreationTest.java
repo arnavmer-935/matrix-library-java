@@ -1,7 +1,7 @@
-package test;
+package test.java.com.arnavmerani.matrix;
 
-import main.Matrix;
-import main.MatrixException;
+import main.java.com.arnavmerani.matrix.Matrix;
+import main.java.com.arnavmerani.matrix.MatrixException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;

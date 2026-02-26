@@ -1,6 +1,6 @@
-package test;
+package test.java.com.arnavmerani.matrix;
 
-import main.Matrix;
+import main.java.com.arnavmerani.matrix.Matrix;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

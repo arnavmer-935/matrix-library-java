@@ -2,10 +2,75 @@ package main;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * A dense, row-major implementation of a real-valued matrix
+ * supporting core linear algebra operations and structural queries.
+ *
+ * <p>This class provides:
+ * <ul>
+ *   <li>Arithmetic operations (addition, subtraction, scalar multiplication, multiplication)</li>
+ *   <li>Linear algebra operations (determinant, inverse, transpose)</li>
+ *   <li>Matrix decompositions (symmetric and skew-symmetric parts)</li>
+ *   <li>Structural and property queries (e.g., square, triangular, symmetric)</li>
+ * </ul>
+ *
+ * <p><strong>Storage Model:</strong><br>
+ * Matrices are stored in row-major order using a {@code double[][]}
+ * backing array.
+ *
+ * <p><strong>Mutability Design:</strong><br>
+ * Operations are provided in both in-place and out-of-place variants.
+ * In-place methods mutate the current instance, while non in-place
+ * methods return new {@code Matrix} instances and leave the original
+ * unchanged.
+ *
+ * <p><strong>Numerical Policy:</strong><br>
+ * Floating-point comparisons in structural queries and pivot
+ * detection use a configured numerical tolerance to account for
+ * rounding behavior. However, {@link #equals(Object)} performs
+ * strict element-wise comparison using exact {@code double}
+ * semantics to preserve the {@code equals}/{@code hashCode}
+ * contract.
+ *
+ * <p><strong>Validation Guarantees:</strong><br>
+ * All dimension-sensitive operations validate input sizes.
+ * Linear algebra operations that require specific matrix configurations
+ * will throw a {@code MatrixException} if the precondition is not met.
+ * Any invalid arguments or user inputs (such as uneven row lengths,
+ * negative dimensions, etc.) will cause the program to throw an
+ * {@code IllegalArgumentException}.
+ * For indexing inaccuracies, the program throws a standard
+ * {@code IndexOutOfBoundsException}
+ *
+ * <p>This class is designed for correctness, clarity, and explicit
+ * numerical behavior rather than high-performance optimized
+ * computation.
+ */
 public final class Matrix {
 
-    // ==== INSTANCE VARIABLES AND DECLARATIONS ====
-
+    /**
+     *
+     * All Matrix instances guarantee the following information about its attributes:
+     * - rows > 0
+     * - columns > 0
+     * - entries != null
+     * - entries.length == rows
+     * - For every r in [0, rows):
+     *       entries[r] != null
+     *       entries[r].length == columns
+     *
+     * - entries is deep-owned by this instance.
+     *   No external references to internal row arrays exist.
+     *
+     * - Equality (equals/hashCode) uses strict element-wise
+     *   comparison and does NOT use tolerance.
+     *
+     * - Numerical queries (e.g., structural checks) use the
+     *   configured equality tolerance.
+     *
+     * - Pivot detection in row-reduction and inverse uses a
+     *   stricter pivot tolerance to handle near-singular matrices.
+     */
     private static final double TOLERANCE = 1e-6;
 
     private final int rows;
@@ -1478,6 +1543,17 @@ public final class Matrix {
         return this.entries[r][c];
     }
 
+    /**
+     * Compares two double values using the configured equality tolerance.
+     *
+     * <p>This method is used for structural and numerical property
+     * checks but is intentionally NOT used in {@link #equals(Object)}.
+     *
+     * @param a first value
+     * @param b second value
+     * @return {@code true} if the absolute difference between
+     *         {@code a} and {@code b} is within the configured tolerance
+     */
     private static boolean almostEqual(double a, double b) {
         return Math.abs(a-b) <= TOLERANCE;
     }
@@ -1588,6 +1664,15 @@ public final class Matrix {
         return 0 <= colIndex && colIndex < columns;
     }
 
+    /**
+     * Returns a deep copy of the specified 2D array.
+     *
+     * <p>Each row is copied individually to ensure no aliasing
+     * with the original grid.
+     *
+     * @param source the grid to copy
+     * @return a deep copy of the provided grid
+     */
     private double[][] deepGridCopy(double[][] grid) {
 
         int nrows = grid.length;
@@ -1600,6 +1685,23 @@ public final class Matrix {
         return result;
     }
 
+    /**
+     * Attempts to locate a valid pivot for the specified column
+     * during row-reduction.
+     *
+     * <p>A pivot is considered valid if its absolute value exceeds
+     * the configured pivot tolerance. This prevents division by
+     * numerically unstable near-zero values.
+     *
+     * <p>If necessary, a row below the current pivot position may
+     * be selected, indicating that a row swap is required.
+     *
+     * @param grid the working matrix during elimination
+     * @param column the pivot column index
+     * @return a {@code Pivot} describing the row index of the pivot
+     *         and whether a row swap is required; returns a pivot
+     *         with row = -1 if no valid pivot is found
+     */
     private Pivot findValidPivot(double[][] grid, int colIdx) {
 
         if (Math.abs(grid[colIdx][colIdx]) > Pivot.PIVOT_TOLERANCE) {
@@ -1615,12 +1717,32 @@ public final class Matrix {
         return new Pivot();
     }
 
+    /**
+     * Swaps two rows in the provided grid in-place.
+     *
+     * <p>This method is used internally during elimination and
+     * determinant computation to maintain correct pivot positioning.
+     *
+     * @param grid the matrix grid
+     * @param r1 the first row index
+     * @param r2 the second row index
+     */
     private void swapGridRow(double[][] grid, int c, int row) {
         double[] temp = grid[c];
         grid[c] = grid[row];
         grid[row] = temp;
     }
 
+    /**
+     * Computes the product of the diagonal entries of the
+     * specified square grid.
+     *
+     * <p>This method assumes the grid is square and does not
+     * perform validation.
+     *
+     * @param grid a square matrix grid
+     * @return the product of its diagonal elements
+     */
     private static double diagonalProduct(double[][] grid) {
         double res = 1;
         for (int i = 0; i < grid.length; i++) {

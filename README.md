@@ -1,6 +1,6 @@
-# Matrix.java
+# Java Matrix Library by Arnav Merani
 
-A numerically aware, row-major Java implementation of a fully functional matrix data structure supporting core linear algebra operations, structural queries, and explicit equality semantics.
+A numerically aware, row-major Java implementation of a fully functional matrix data structure supporting core linear algebra operations, structural queries, and explicit equality semantics. A high-performance, Maven-managed Linear Algebra library for Java 21 including end-to-end Javadoc and wide JUnit testing coverage.
 
 ---
 
@@ -11,7 +11,6 @@ A numerically aware, row-major Java implementation of a fully functional matrix 
 - Scalar multiplication
 - Determinant computation (Gaussian elimination-based)
 - Matrix inverse (Gauss–Jordan elimination with partial pivoting)
-- Row reduction to Reduced Row Echelon Form (RREF)
 - Symmetric and skew-symmetric decomposition
 - Structural queries (square, triangular, symmetric, identity, etc.)
 - In-place and out-of-place operation variants
@@ -95,3 +94,9 @@ public class Main {
     }
 }
 ```
+---
+
+## License and Contact
+- Maintainer: Arnav Merani
+- GitHub: arnavmer-935
+- License: MIT

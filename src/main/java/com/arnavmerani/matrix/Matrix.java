@@ -1,4 +1,4 @@
-package main.java.com.arnavmerani.matrix;
+package com.arnavmerani.matrix;
 import java.util.Arrays;
 import java.util.List;
 
@@ -60,13 +60,10 @@ public final class Matrix {
      * - For every r in [0, rows):
      *       entries[r] != null
      *       entries[r].length == columns
-     *
      * - entries is deep-owned by this instance.
      *   No external references to internal row arrays exist.
-     *
      * - Equality (equals/hashCode) uses strict element-wise
      *   comparison and does NOT use tolerance.
-     *
      * - Numerical queries (e.g., structural checks) use the
      *   configured equality tolerance.
      *
@@ -193,7 +190,7 @@ public final class Matrix {
         }
 
         this.rows = grid.size();
-        this.columns = grid.get(0).size();
+        this.columns = grid.getFirst().size();
         this.order = new Pair(rows, columns);
         this.entries = new double[rows][columns];
 
@@ -762,7 +759,6 @@ public final class Matrix {
     /**
      * Scales each entry of this matrix by the finite real scalar {@code k},
      * and returns a new Matrix instance consisting of those scaled entries.
-     *
      * This operation does not mutate {@code this} in-place.
      * It allocates a new matrix. The dimensions remain unchanged.
      *
@@ -1513,7 +1509,7 @@ public final class Matrix {
      * <p><strong>Time Complexity:</strong> O(mn)<br>
      * <strong>Space Complexity:</strong> O(1)
      *
-     * @param obj the object to compare with
+     * @param other the object to compare with
      * @return {@code true} if the specified object represents a matrix
      *         with identical dimensions and entries; {@code false} otherwise
      */
@@ -1664,7 +1660,7 @@ public final class Matrix {
      * <p>Each row is copied individually to ensure no aliasing
      * with the original grid.
      *
-     * @param source the grid to copy
+     * @param grid the grid to copy
      * @return a deep copy of the provided grid
      */
     private double[][] deepGridCopy(double[][] grid) {
@@ -1691,7 +1687,7 @@ public final class Matrix {
      * be selected, indicating that a row swap is required.
      *
      * @param grid the working matrix during elimination
-     * @param column the pivot column index
+     * @param colIdx the pivot column index
      * @return a {@code Pivot} describing the row index of the pivot
      *         and whether a row swap is required; returns a pivot
      *         with row = -1 if no valid pivot is found
@@ -1718,8 +1714,8 @@ public final class Matrix {
      * determinant computation to maintain correct pivot positioning.
      *
      * @param grid the matrix grid
-     * @param r1 the first row index
-     * @param r2 the second row index
+     * @param c the first row index
+     * @param row the second row index
      */
     private void swapGridRow(double[][] grid, int c, int row) {
         double[] temp = grid[c];

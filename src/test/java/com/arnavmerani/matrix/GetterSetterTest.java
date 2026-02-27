@@ -1,7 +1,4 @@
-package test.java.com.arnavmerani.matrix;
-
-import main.java.com.arnavmerani.matrix.Matrix;
-import main.java.com.arnavmerani.matrix.MatrixException;
+package com.arnavmerani.matrix;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;

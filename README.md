@@ -40,17 +40,58 @@ This separation ensures numerical robustness while preserving the `equals`/`hash
 
 ## Getting Started
 
-```java
+### 1. Install the Library Locally
 
-import com.arnavmerani.matrix
+Clone the repository and install the artifact into your local Maven repository:
 
-Matrix A = Matrix.ofRows(new double[][] {
-    {1, 2},
-    {3, 4}
-});
+```bash
+   mvn clean install
+```
+This installs the library into:
 
-Matrix B = A.inverse();
-double det = A.determinant();
+```bash
+  ~/.m2/repository/com/arnavmerani/matrix/1.0.1/
+```
 
-Matrix C = A.multiply(B);
-System.out.println(C);
+### 2. Add dependency to your project
+
+Create a new project with the Maven build system, and add the
+following dependency to your pom.xml file:
+
+```XML
+<dependency>
+    <groupId>com.arnavmerani</groupId>
+    <artifactId>matrix</artifactId>
+    <version>1.0.1</version>
+</dependency>
+```
+
+Then reload Maven in your project using:
+```bash
+  mvn clean compile 
+```
+
+
+## Usage Example
+```Java
+import com.arnavmerani.matrix.Matrix;
+
+public class Main {
+    public static void main(String[] args) {
+
+        Matrix A = new Matrix(new double[][] {
+            {1, 2},
+            {3, 4}
+        });
+
+        Matrix B = A.inverse();
+        double det = A.determinant();
+
+        Matrix C = A.multiply(B);
+
+        System.out.println("det(A) = " + det);
+        System.out.println("A * A⁻¹ =");
+        System.out.println(C);
+    }
+}
+```
